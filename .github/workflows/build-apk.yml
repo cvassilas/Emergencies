@@ -3,6 +3,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,7 +23,16 @@ jobs:
           gradle-version: '8.7'
       - name: Build release APK
         run: gradle :app:assembleRelease --no-daemon
+      - name: Rename APK
+        run: cp app/build/outputs/apk/release/app-release.apk ICU-Emergencies-v${{ github.run_number }}.apk
       - uses: actions/upload-artifact@v4
         with:
           name: ICU-Emergencies-release-apk
-          path: app/build/outputs/apk/release/app-release.apk
+          path: ICU-Emergencies-v${{ github.run_number }}.apk
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v${{ github.run_number }}" "ICU-Emergencies-v${{ github.run_number }}.apk" \
+            --title "ICU Emergencies v${{ github.run_number }}" \
+            --notes "Release APK built from main at $(git rev-parse --short HEAD). Install via 'install unknown apps'. Uninstall any older debug build first."
