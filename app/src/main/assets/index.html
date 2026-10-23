@@ -804,6 +804,10 @@ const INF=[
     {label:'80 mcg/mL — 8 mg in 100 mL', amount:8000, vol:100, note:'8 mg in 100 mL (80 mcg/mL). Central only.'},
     {label:'80 mcg/mL — 20 mg in 250 mL', amount:20000, vol:250, note:'20 mg in 250 mL (80 mcg/mL). Central only.'},
     {label:'80 mcg/mL — 40 mg in 500 mL', amount:40000, vol:500, note:'40 mg in 500 mL (80 mcg/mL). Central only.'}]},
+ {name:'Noradrenaline (peripheral)', base:'mcg', unit:'mcg/kg/min', perKg:true, per:'min', basis:'actual', range:[0.01,0.2], central:false,
+  presets:[
+    {label:'16 mcg/mL — 4 mg in 250 mL (glucose 5% or NaCl 0.9%)', amount:4000, vol:250, note:'Peripheral noradrenaline (GUI0669). Make-up: withdraw 4 mL from the bag and add 4 mL of noradrenaline 1 mg/mL. Start 0.05 mcg/kg/min, titrate 0.01–0.2. Maximum 0.2 mcg/kg/min. Do not bolus. Use a 20G or larger PVC above the wrist with a second PVC sited as backup. Arterial line recommended. Change bag every 24 h. Maximum 48 h. Inform a doctor at 0.2, and notify critical care if above 0.15 or running beyond 44 h. Central access needed above 0.2 or beyond 48 h.'}
+  ]},
  {name:'Adrenaline', base:'mcg', unit:'mcg/kg/min', perKg:true, per:'min', basis:'actual', range:[0,1], central:true,
   presets:[
     {label:'80 mcg/mL — 8 mg in 100 mL', amount:8000, vol:100, note:'8 mg in 100 mL (80 mcg/mL). Central only.'},
@@ -873,7 +877,7 @@ const INF=[
   presets:[
     {label:'1000 units/mL — 40,000 units in 40 mL', amount:40000, vol:40, note:'40,000 units in 40 mL (1000 units/mL). CVVH/HF: 500 units/hr (max 1500). APTTr <2 for CVVH/HF.'}]}
 ];
-const CATS={Noradrenaline:['c-pressor','Pressor'],Adrenaline:['c-pressor','Pressor / inotrope'],Vasopressin:['c-pressor','Pressor'],Dobutamine:['c-pressor','Inotrope'],Dopamine:['c-pressor','Pressor / inotrope'],Metaraminol:['c-pressor','Pressor'],Atracurium:['c-para','Paralysis'],Rocuronium:['c-para','Paralysis'],Midazolam:['c-sed','Sedative'],Propofol:['c-sed','Sedative'],Dexmedetomidine:['c-sed','Sedative'],Clonidine:['c-sed','Sedative'],Ketamine:['c-sed','Sedative'],Alfentanil:['c-opi','Opiate'],Remifentanil:['c-opi','Opiate'],Fentanyl:['c-opi','Opiate']};
+const CATS={Noradrenaline:['c-pressor','Pressor'],'Noradrenaline (peripheral)':['c-pressor','Pressor (peripheral)'],Adrenaline:['c-pressor','Pressor / inotrope'],Vasopressin:['c-pressor','Pressor'],Dobutamine:['c-pressor','Inotrope'],Dopamine:['c-pressor','Pressor / inotrope'],Metaraminol:['c-pressor','Pressor'],Atracurium:['c-para','Paralysis'],Rocuronium:['c-para','Paralysis'],Midazolam:['c-sed','Sedative'],Propofol:['c-sed','Sedative'],Dexmedetomidine:['c-sed','Sedative'],Clonidine:['c-sed','Sedative'],Ketamine:['c-sed','Sedative'],Alfentanil:['c-opi','Opiate'],Remifentanil:['c-opi','Opiate'],Fentanyl:['c-opi','Opiate']};
 INF.forEach(d=>{const c=CATS[d.name]; d.cls=c?c[0]:''; d.catName=c?c[1]:'';});
 const selDrug=document.getElementById('infDrug'), selConc=document.getElementById('infConc');
 const CATCOL={'c-pressor':'#f8d7e6','c-para':'#f9d6d5','c-sed':'#fff3c4','c-opi':'#d6e8fb'};
