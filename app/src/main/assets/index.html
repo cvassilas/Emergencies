@@ -801,6 +801,9 @@ function renderQC(){
 const INF=[
  {name:'Noradrenaline', base:'mcg', unit:'mcg/kg/min', perKg:true, per:'min', basis:'actual', range:[0,1], central:true,
   presets:[
+    {label:'80 mcg/mL — 4 mg in 50 mL', amount:4000, vol:50, note:'4 mg in 50 mL (80 mcg/mL), the standard concentration. Central line only.'},
+    {label:'160 mcg/mL — 8 mg in 50 mL', amount:8000, vol:50, note:'HIGHER CONCENTRATION: 8 mg in 50 mL (160 mcg/mL). Check Trust policy and pharmacy approval first. Central line only. Doubling the concentration doubles the effect of any rate error. Double-check the pump setting and the mcg/kg/min calculation.'},
+    {label:'320 mcg/mL — 16 mg in 50 mL', amount:16000, vol:50, note:'VERY HIGH CONCENTRATION: 16 mg in 50 mL (320 mcg/mL). Only with explicit Trust and pharmacy approval for this patient. Central line only. Very small volume changes cause large dose changes. Check the pump, the concentration and the calculation with a second clinician before starting.'},
     {label:'80 mcg/mL — 8 mg in 100 mL', amount:8000, vol:100, note:'8 mg in 100 mL (80 mcg/mL). Central only.'},
     {label:'80 mcg/mL — 20 mg in 250 mL', amount:20000, vol:250, note:'20 mg in 250 mL (80 mcg/mL). Central only.'},
     {label:'80 mcg/mL — 40 mg in 500 mL', amount:40000, vol:500, note:'40 mg in 500 mL (80 mcg/mL). Central only.'}]},
@@ -811,6 +814,9 @@ const INF=[
   ]},
  {name:'Adrenaline', base:'mcg', unit:'mcg/kg/min', perKg:true, per:'min', basis:'actual', range:[0,1], central:true,
   presets:[
+    {label:'80 mcg/mL — 4 mg in 50 mL', amount:4000, vol:50, note:'4 mg in 50 mL (80 mcg/mL), the standard concentration. Central line only.'},
+    {label:'160 mcg/mL — 8 mg in 50 mL', amount:8000, vol:50, note:'HIGHER CONCENTRATION: 8 mg in 50 mL (160 mcg/mL). Check Trust policy and pharmacy approval first. Central line only. Doubling the concentration doubles the effect of any rate error. Double-check the pump setting and the mcg/kg/min calculation.'},
+    {label:'320 mcg/mL — 16 mg in 50 mL', amount:16000, vol:50, note:'VERY HIGH CONCENTRATION: 16 mg in 50 mL (320 mcg/mL). Only with explicit Trust and pharmacy approval for this patient. Central line only. Very small volume changes cause large dose changes. Check the pump, the concentration and the calculation with a second clinician before starting.'},
     {label:'80 mcg/mL — 8 mg in 100 mL', amount:8000, vol:100, note:'8 mg in 100 mL (80 mcg/mL). Central only.'},
     {label:'80 mcg/mL — 40 mg in 500 mL', amount:40000, vol:500, note:'40 mg in 500 mL (80 mcg/mL). Central only.'}]},
  {name:'Vasopressin', base:'units', unit:'units/min', perKg:false, per:'min', basis:'fixed', range:[0.01,0.04], central:true,
