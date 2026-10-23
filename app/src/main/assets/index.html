@@ -1,0 +1,1178 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>ICU Emergency Companion</title>
+<style>
+:root{
+  --bg:#f4f6f7; --surface:#ffffff; --ink:#15202b; --muted:#5b6b78; --line:#d8e0e5;
+  --accent:#0f6f73; --accent-ink:#ffffff; --warn:#b26a00; --crit:#b3261e; --ok:#2b7a3d; --chip:#e7eef1;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1417; --surface:#162027; --ink:#e6eef2; --muted:#93a4ae; --line:#26343d;
+    --accent:#4fc3c7; --accent-ink:#06191b; --warn:#f0a94a; --crit:#ff8a80; --ok:#7bd38f; --chip:#1d2b33; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1417; --surface:#162027; --ink:#e6eef2; --muted:#93a4ae; --line:#26343d;
+  --accent:#4fc3c7; --accent-ink:#06191b; --warn:#f0a94a; --crit:#ff8a80; --ok:#7bd38f; --chip:#1d2b33; color-scheme: dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 40px}
+h1{font-size:20px;margin:0}
+h2{font-size:17px;margin:0 0 8px}
+h3{font-size:14px;margin:14px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.badge{font-size:12px;padding:3px 8px;border-radius:999px;background:var(--chip);color:var(--muted)}
+.badge.on{background:var(--accent);color:var(--accent-ink)}
+nav.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px}
+nav.tabs button{flex:0 0 auto}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 12px;border-radius:10px;min-height:40px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.crit{background:var(--crit);color:#fff;border-color:var(--crit);font-weight:600}
+button.active{outline:2px solid var(--accent);outline-offset:1px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input,select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:40px;width:100%;max-width:100%}
+label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:4px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;min-width:0}
+.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.out{font-variant-numeric:tabular-nums;font-size:22px;font-weight:650}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px}
+.kv div:nth-child(odd){color:var(--muted)}
+.tabular{font-variant-numeric:tabular-nums}
+.warnbox{border-left:4px solid var(--warn);background:var(--chip);padding:8px 10px;border-radius:8px;font-size:13.5px;margin:8px 0}
+.critbox{border-left:4px solid var(--crit);background:var(--chip);padding:8px 10px;border-radius:8px;font-size:13.5px;margin:8px 0}
+.okbox{border-left:4px solid var(--ok);background:var(--chip);padding:8px 10px;border-radius:8px;font-size:13.5px;margin:8px 0}
+.clock{font-size:56px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.02em;text-align:center;line-height:1}
+.clock-sub{font-size:13px;color:var(--muted);text-align:center;margin-top:6px}
+.cyc{font-size:30px;font-weight:650;font-variant-numeric:tabular-nums;text-align:center}
+.flash{animation:flash 1s steps(2,start) infinite}
+@keyframes flash{to{background:var(--crit);color:#fff}}
+@media (prefers-reduced-motion:reduce){.flash{animation:none}}
+ul.clean{margin:4px 0;padding-left:18px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.scroll{overflow-x:auto}
+.hsec{display:none}
+.hsec.on{display:block}
+details{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:8px;background:var(--surface)}
+summary{cursor:pointer;font-weight:600}
+.chk{display:flex;gap:8px;align-items:flex-start;padding:5px 0}
+.chk input{width:auto;min-height:0;margin-top:3px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;border-radius:0;min-height:36px}
+.seg button.active{background:var(--accent);color:var(--accent-ink);outline:none}
+.cat{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;border-left:4px solid;color:var(--ink)}
+.c-pressor{background:rgba(233,30,99,.2);border-color:#e91e63}
+.c-para{background:rgba(229,57,53,.2);border-color:#e53935}
+.c-sed{background:rgba(251,192,45,.25);border-color:#fbc02d}
+.c-opi{background:rgba(30,136,229,.2);border-color:#1e88e5}
+.log{font-size:13px;max-height:200px;overflow:auto;border-top:1px solid var(--line);margin-top:8px;padding-top:6px}
+.log div{padding:2px 0}
+</style>
+
+<header>
+  <div>
+    <h1>ICU / PICU Emergency Companion</h1>
+    <div class="small muted">Arrest timer, emergencies, procedures and calculators. Check against your local protocols and formulary.</div>
+  </div>
+  <div class="row">
+    <span id="wakeBadge" class="badge">Screen wake: checking</span>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="arrest" class="active primary">Arrest timer</button>
+  <button data-tab="emerg">Emergencies</button>
+  <button data-tab="procs">Procedures</button>
+  <button data-tab="calc">Calculators</button>
+  <button data-tab="inf">Infusions</button>
+  <button data-tab="renal">Renal drugs (CVVHD)</button>
+  <button data-tab="abx">Antimicrobials</button>
+</nav>
+
+<!-- ============ ARREST TIMER ============ -->
+<section id="arrest" class="hsec on">
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div class="seg" role="group" aria-label="Patient group">
+        <button id="modeAdult" class="active">Adult (ALS)</button>
+        <button id="modePaed">Child (PLS)</button>
+      </div>
+      <div class="row">
+        <label style="margin:0"><input type="number" id="arrestWt" placeholder="Weight kg" style="width:120px;min-height:36px"></label>
+        <label id="ageWrap" style="margin:0"><input type="number" id="arrestAge" placeholder="Age (yrs)" step="0.1" style="width:110px;min-height:36px"></label>
+        <span id="wtEst" class="small" style="font-weight:600"></span>
+      </div>
+    </div>
+    <div class="small muted" id="modeNote" style="margin-top:6px">Adult: shock 150 J biphasic. Adrenaline 1 mg (1:10,000 = 10 mL) every 3–5 min. Amiodarone 300 mg then 150 mg.</div>
+  </div>
+
+  <div class="card" style="text-align:center">
+    <div class="clock" id="clock">00:00</div>
+    <div class="clock-sub">Arrest time</div>
+    <div style="height:12px"></div>
+    <div class="cyc" id="cycle">02:00</div>
+    <div class="small muted tabular" id="cycleCount" style="text-align:center">Cycle 0</div>
+    <div class="clock-sub" id="cycleSub">Time to next rhythm check</div>
+    <div class="row" style="justify-content:center;margin-top:12px">
+      <button id="startBtn" class="primary">Start arrest</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+  </div>
+
+  <div id="prompt" class="card" hidden></div>
+
+  <div class="card" id="rhythmCard">
+    <h2>Rhythm check (every 2 min)</h2>
+    <div class="grid" style="grid-template-columns:1fr 1fr">
+      <button id="btnShock" class="crit" disabled>Shockable<br><span class="small">VF / pulseless VT</span></button>
+      <button id="btnNonShock" class="primary" disabled>Non-shockable<br><span class="small">PEA / asystole</span></button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button id="btnShockDel" class="crit" disabled>Shock delivered</button>
+      <button id="btnROSC" disabled>ROSC (pulse returns)</button>
+      <button id="btnCPR" disabled>Log: CPR restarted</button>
+    </div>
+    <div id="rhythmInfo" class="small muted" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card">
+    <h2>Drugs</h2>
+    <div class="grid" style="grid-template-columns:1fr 1fr">
+      <div>
+        <div class="small muted">Adrenaline</div>
+        <div class="out" id="adrDose">1 mg</div>
+        <div class="small muted" id="adrVol">10 mL of 1:10,000</div>
+        <div class="small" id="adrDue" style="margin:4px 0"></div>
+        <button id="btnAdr" class="primary" disabled>Adrenaline given</button>
+      </div>
+      <div>
+        <div class="small muted">Amiodarone</div>
+        <div class="out" id="amioDose">300 mg</div>
+        <div class="small muted" id="amioNext">Due after 3rd shock</div>
+        <button id="btnAmio" style="margin-top:4px" disabled>Amiodarone given</button>
+      </div>
+    </div>
+    <div class="small muted" style="margin-top:10px">Shock count: <span id="shockCount" class="tabular">0</span> · Energy: <span id="energy">150 J</span></div>
+    <div class="warnbox small">Adrenaline in the non-shockable arm should be given as soon as IV/IO access is secured. In the shockable arm, give it after the 2nd shock. Repeat every 3–5 min (adult 1 mg; child 10 mcg/kg of 1:10,000).</div>
+  </div>
+
+  <div class="card">
+    <h2>Other arrest drugs</h2>
+    <div id="otherDrugs"></div>
+    <div class="small muted" style="margin-top:6px">Verify against PLS/ALS guidance and your local formulary before giving.</div>
+  </div>
+  <div class="card">
+    <h2>Reversible causes</h2>
+    <div class="grid" style="grid-template-columns:1fr 1fr">
+      <div>
+        <h3>Hs</h3>
+        <label class="chk"><input type="checkbox" data-h> Hypoxia</label>
+        <label class="chk"><input type="checkbox" data-h> Hypovolaemia</label>
+        <label class="chk"><input type="checkbox" data-h> Hypo/hyperkalaemia (K+)</label>
+        <label class="chk"><input type="checkbox" data-h> Hypothermia</label>
+        <label class="chk"><input type="checkbox" data-h> Hypo/hyperglycaemia</label>
+        <label class="chk"><input type="checkbox" data-h> Hydrogen ion (acidosis)</label>
+        <label class="chk"><input type="checkbox" data-h> Hypocalcaemia / Mg</label>
+      </div>
+      <div>
+        <h3>Ts</h3>
+        <label class="chk"><input type="checkbox" data-t> Tension pneumothorax</label>
+        <label class="chk"><input type="checkbox" data-t> Tamponade (cardiac)</label>
+        <label class="chk"><input type="checkbox" data-t> Toxins</label>
+        <label class="chk"><input type="checkbox" data-t> Thrombosis (pulmonary)</label>
+        <label class="chk"><input type="checkbox" data-t> Thrombosis (coronary)</label>
+        <label class="chk"><input type="checkbox" data-t> Trauma / tube displacement (DOPE)</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><h2>Event log</h2><div class="row"><button id="copyLog">Copy log</button><button id="exportLog">Export .txt</button></div></div>
+    <div class="log" id="log"><div class="muted">No events yet.</div></div>
+    <div id="copyMsg" class="small muted"></div>
+  </div>
+</section>
+
+<!-- ============ EMERGENCIES ============ -->
+<section id="emerg" class="hsec">
+  <details open>
+    <summary>Displaced endotracheal tube (ETT)</summary>
+    <ul class="clean small">
+      <li>Shout for help. Disconnect the ventilator from the tube and ventilate with a bag-valve-mask on 100% O2.</li>
+      <li>Check: chest rise, EtCO2 trace, SpO2, bilateral air entry, and gastric sounds.</li>
+      <li>Work through <b>DOPE</b>: <b>D</b>isplacement (tube out or too deep/mainstem), <b>O</b>bstruction (secretions, plug, kink), <b>P</b>neumothorax (tension), <b>E</b>quipment (circuit, cuff, leak).</li>
+      <li>If the tube is out or in doubt, re-intubate with a bougie. Confirm with EtCO2 and auscultation, then CXR.</li>
+      <li>If unable to intubate or oxygenate: follow CICO and perform a scalpel-bougie-tube cricothyroidotomy.</li>
+    </ul>
+  </details>
+
+  <details open>
+    <summary>Displaced tracheostomy</summary>
+    <ul class="clean small">
+      <li>Call for help immediately (anaesthetist and ENT / tracheostomy team). Give 100% O2 by bag-valve-mask over the mouth and nose and the stoma together.</li>
+      <li><b>Early (tract not mature, usually first 7–10 days):</b> do not blindly reinsert through a fresh stoma. Oral intubation is the preferred route. Use a bougie and laryngoscope, and keep the ETT size in mind.</li>
+      <li>If oral intubation fails, reinsert a tracheostomy tube through the stoma with a bougie/dilator under direct vision.</li>
+      <li><b>Mature tract:</b> reinsert the tracheostomy using the same size or one size smaller, with a bougie. Check EtCO2 and chest rise.</li>
+      <li>If it is not possible to oxygenate or intubate, use CICO: scalpel-bougie-tube cricothyroidotomy or the emergency cricothyroidotomy kit.</li>
+      <li>Keep the old tube and the spare tube at the bedside. Document the event on the adverse-event log.</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>Tension pneumothorax</summary>
+    <ul class="clean small">
+      <li>Clinical diagnosis: absent breath sounds on one side, tracheal deviation, hypotension, raised airway pressure, distended neck veins.</li>
+      <li>Decompress immediately (large-bore cannula 2nd intercostal space mid-clavicular line, or 4th–5th intercostal space anterior axillary line), then insert a chest drain.</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>Pulmonary oedema / shock / bradycardia</summary>
+    <ul class="clean small">
+      <li>Bradycardia with poor perfusion: atropine (adult 500 mcg; child 20 mcg/kg, min 100 mcg) and/or adrenaline infusion, then pacing if needed.</li>
+      <li>Vasoactive support: noradrenaline first-line for shock. Use central access (see Infusions).</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>Anaphylaxis</summary>
+    <ul class="clean small">
+      <li>IM adrenaline 500 mcg (adult, 1:1000) into the anterolateral thigh. Repeat every 5 min if needed.</li>
+      <li>IV hydrocortisone and chlorphenamine as adjuncts. IV fluids for hypotension.</li>
+    </ul>
+  </details>
+
+  <div class="card" style="margin-top:12px">
+    <h2>RSI drugs</h2>
+    <div class="small muted">Typical doses for planning. Verify against local ICU RSI guidelines and weight-based calculations.</div>
+    <h3>Adult (actual weight unless obese; IBW in obesity)</h3>
+    <div class="scroll"><table>
+      <tr><th>Drug</th><th>Dose</th><th>Notes</th></tr>
+      <tr><td>Etomidate</td><td>0.3 mg/kg</td><td>Haemodynamically neutral.</td></tr>
+      <tr><td>Ketamine</td><td>1–2 mg/kg</td><td>Preferred if shocked or asthmatic.</td></tr>
+      <tr><td>Propofol</td><td>1–2 mg/kg</td><td>Hypotension risk.</td></tr>
+      <tr><td>Fentanyl (opioid)</td><td>1–2 mcg/kg</td><td>Analgesia before intubation.</td></tr>
+      <tr><td>Rocuronium</td><td>1.2 mg/kg</td><td>Long acting, no reversal in emergency.</td></tr>
+      <tr><td>Suxamethonium</td><td>1–1.5 mg/kg (max 150 mg)</td><td>Short acting; contraindicated in hyperkalaemia, neuromuscular disease.</td></tr>
+    </table></div>
+    <h3>Child (PICU)</h3>
+    <div class="scroll"><table>
+      <tr><th>Drug</th><th>Dose</th><th>Notes</th></tr>
+      <tr><td>Etomidate</td><td>0.3 mg/kg</td><td>Single dose.</td></tr>
+      <tr><td>Ketamine</td><td>1–2 mg/kg</td><td>Maintains BP.</td></tr>
+      <tr><td>Propofol</td><td>2–3 mg/kg</td><td>Caution in haemodynamic compromise.</td></tr>
+      <tr><td>Fentanyl</td><td>1–2 mcg/kg</td><td>Analgesia.</td></tr>
+      <tr><td>Rocuronium</td><td>1–1.2 mg/kg</td><td>Dose by weight.</td></tr>
+      <tr><td>Suxamethonium</td><td>2 mg/kg (max 150 mg)</td><td>Check K+ and neuromuscular history.</td></tr>
+    </table></div>
+    <div class="warnbox small">Pre-oxygenate for 3 min (100% O2). Have the difficult airway trolley, a bougie and a second-generation supraglottic airway ready. Check EtCO2 after tube placement.</div>
+  </div>
+</section>
+
+<!-- ============ PROCEDURES ============ -->
+<section id="proc_legacy" class="hsec">
+  <div class="card">
+    <h2>Procedure safety checklists (LocSSIP)</h2>
+    <div class="small muted">Use the full printed LocSSIP form for documentation. Key points below for quick reference.</div>
+  </div>
+  <details open>
+    <summary>Intubation (ITU)</summary>
+    <ul class="clean small">
+      <li>Team roles (intubator, drugs, assistant, cricoid, MILS). Difficult airway trolley ready.</li>
+      <li>Pre-oxygenate 100% for 3 min. Nasal cannulae for apnoeic oxygenation if needed.</li>
+      <li>Spinal precautions where indicated. Water's circuit ready.</li>
+      <li>Post intubation: confirm position (EtCO2 trace, bilateral air entry), tube depth, cuff pressure, ventilator settings, sedation, CXR, handover.</li>
+    </ul>
+  </details>
+  <details>
+    <summary>Tracheostomy</summary>
+    <ul class="clean small">
+      <li>Confirm the team, roles and equipment, including bronchoscope, spare tubes and difficult airway plan.</li>
+      <li>Check coagulation and consent. Hold feeds and aspirate NG.</li>
+      <li>Post procedure: position of the tube (bronchoscopy if used), cuff pressure, EtCO2, CXR as required, bedhead sign.</li>
+    </ul>
+  </details>
+  <details>
+    <summary>Bronchoscopy</summary>
+    <ul class="clean small">
+      <li>Confirm ventilator settings (100% FiO2, PEEP appropriate), sedation and paralysis, and that capnography is in situ.</li>
+      <li>Check coagulation and contraindications (high FiO2 or PEEP, anatomical, vascular, coagulopathy).</li>
+      <li>Record BAL and tissue samples sent and the sedation given.</li>
+    </ul>
+  </details>
+  <details>
+    <summary>Central venous catheter (CVC)</summary>
+    <ul class="clean small">
+      <li>Consent, coagulation, drug allergies. Two-person team (operator and assistant).</li>
+      <li>2% chlorhexidine / 70% isopropyl alcohol skin prep. Large sterile drape. Full sterile barrier.</li>
+      <li>Ultrasound-guided. Check every lumen aspirates and flushes. Confirm placement (guidewire removed, CVP waveform, US, CXR as indicated).</li>
+      <li>Paired venous and arterial gases if position or concern about the line. Record CVP.</li>
+    </ul>
+  </details>
+  <details>
+    <summary>Chest drain</summary>
+    <ul class="clean small">
+      <li>Safe triangle (anterior to mid-axillary line, above nipple, below axilla). Ultrasound guidance if available.</li>
+      <li>Stop if unable to aspirate air or fluid during LA infiltration.</li>
+      <li>Effusion: no more than 500 mL in the first hour and no more than 1500 mL in the first 24 h.</li>
+      <li>Check sutures and dressing, drain not elevated above the chest, and CXR for position.</li>
+    </ul>
+  </details>
+</section>
+
+<!-- ============ PROCEDURE CHECKLISTS (interactive) ============ -->
+<section id="procs" class="hsec">
+  <div class="card">
+    <h2>LocSSIP safety checklists</h2>
+    <div class="small muted">Tick each item as it is done. Use the printed LocSSIP form for the record.</div>
+    <div class="small muted" style="margin-top:6px">Each checklist has a Copy button to copy its ticks as text.</div>
+  </div>
+  <div id="procList"></div>
+</section>
+
+<!-- ============ CALCULATORS ============ -->
+<section id="calc" class="hsec">
+  <div class="card">
+    <h2>Ideal body weight (IBW)</h2>
+    <div class="grid">
+      <div><label>Sex</label>
+        <select id="ibwSex"><option value="m">Male</option><option value="f">Female</option></select></div>
+      <div><label>Height (cm)</label><input type="number" id="ibwHt" placeholder="e.g. 170"></div>
+      <div><label>Actual weight (kg)</label><input type="number" id="ibwAct" placeholder="e.g. 80"></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <span>IBW: <b id="ibwOut" class="tabular">—</b> kg</span>
+      <span>BMI: <b id="bmiOut" class="tabular">—</b></span>
+    </div>
+    <div class="small muted" id="ibwNote"></div>
+  </div>
+
+  <div class="card">
+    <h2>WETFLAG (paediatric emergency)</h2>
+    <div class="grid">
+      <div><label>Age (years)</label><input type="number" id="wfAge" step="0.1" placeholder="e.g. 4"></div>
+      <div><label>Measured weight (kg) – overrides age estimate</label><input type="number" id="wfWt" step="0.1"></div>
+    </div>
+    <div class="scroll" style="margin-top:10px"><table id="wfTable">
+      <tr><th>Item</th><th>Value</th><th>Calculation</th></tr>
+    </table></div>
+    <div class="small muted" style="margin-top:6px">Weight estimate (1–5 years only): (age + 4) × 2 kg. Use a length tape or measured weight otherwise. Confirm all doses against local policy.</div>
+  </div>
+
+  <div class="card">
+    <h2>Infusion calculator (custom bag)</h2>
+    <div class="small muted" style="margin-bottom:8px">Choose a drug and a common bag, or enter your own amount and volume. The concentration updates as you type.</div>
+    <div class="grid">
+      <div><label>Drug</label><select id="ccDrug"></select></div>
+      <div><label>Common bag</label><select id="ccBag"></select></div>
+      <div><label id="ccAmtLbl">Drug amount</label><input type="number" id="ccAmt" step="any"></div>
+      <div><label>Total volume (mL)</label><input type="number" id="ccVol" step="any"></div>
+      <div><label>Diluent</label><select id="ccDil"><option>NaCl 0.9%</option><option>Glucose 5%</option></select></div>
+    </div>
+    <div id="ccCat" style="margin-top:8px"></div>
+    <div class="small" id="ccNote" style="margin-top:8px"></div>
+    <div class="grid" style="margin-top:10px">
+      <div><label>Concentration</label><div class="out" id="ccConc">—</div></div>
+      <div><label>Patient weight (kg)</label><input type="number" id="ccWt" step="0.1"></div>
+      <div><label>Pump rate (mL/hr)</label><input type="number" id="ccRate" step="0.1"></div>
+    </div>
+    <div class="card" style="margin-top:12px;background:var(--chip)">
+      <div class="small muted">Delivered dose</div>
+      <div class="out" id="ccOut">—</div>
+      <div class="small" id="ccWork" style="margin-top:6px"></div>
+      <div id="ccFlag" style="margin-top:6px"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Quick calc check</h2>
+    <div class="small muted" style="margin-bottom:8px">Enter a drug dose and volume to check the result. Useful before you draw up or set a pump.</div>
+    <div class="grid">
+      <div><label>Dose (mg)</label><input type="number" id="qcDose" step="any"></div>
+      <div><label>Concentration (mg/mL)</label><input type="number" id="qcConc" step="any"></div>
+      <div><label>Volume (mL) calculated</label><div id="qcVol" class="out" style="padding:8px 0">—</div></div>
+    </div>
+    <div class="small" id="qcOut" style="margin-top:6px"></div>
+  </div>
+</section>
+
+<!-- ============ INFUSIONS ============ -->
+<section id="inf" class="hsec">
+  <div class="card">
+    <h2>Infusion calculator</h2>
+    <div class="small muted" style="margin-bottom:8px">Source: NUH/WCUH Critical Care IV Infusion Prescribing Guidelines (2020). Enter the bag, the rate and the patient's weight to get the delivered dose.</div>
+    <div class="grid">
+      <div><label>Drug</label><select id="infDrug"></select></div>
+      <div><label>Make-up (concentration)</label><select id="infConc"></select></div>
+      <div><label>Weight basis</label>
+        <select id="infBasis"><option value="actual">Actual weight</option><option value="ideal">Ideal weight (IBW)</option></select></div>
+    </div>
+    <div id="infCat" style="margin-top:6px"></div>
+    <div class="warnbox small" id="infMake"></div>
+    <div class="grid" style="margin-top:6px">
+      <div><label>Patient weight (kg)</label><input type="number" id="infWt" step="0.1"></div>
+      <div><label id="infRateLbl">Rate (mL/hr)</label><input type="number" id="infRate" step="0.1"></div>
+      <div><label>Mode</label>
+        <div class="seg" role="group"><button id="modeFwd" class="active">Rate → dose</button><button id="modeRev">Dose → rate</button></div></div>
+    </div>
+    <div id="infRevBox" style="display:none;margin-top:10px">
+      <div class="grid">
+        <div><label id="infTargetLbl">Target dose</label><input type="number" id="infTarget" step="0.01"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:12px;background:var(--chip)">
+      <div class="small muted" id="infOutLbl">Delivered dose</div>
+      <div class="out" id="infOut">—</div>
+      <div class="small" id="infWork" style="margin-top:6px"></div>
+      <div id="infFlag" style="margin-top:6px"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Infusion reference (guide ranges)</h2>
+    <div class="row small" style="margin-bottom:8px"><span class="cat c-pressor">Pressors / inotropes</span><span class="cat c-para">Paralysis</span><span class="cat c-sed">Sedatives</span><span class="cat c-opi">Opiates</span></div>
+    <div class="scroll"><table id="infTable"></table></div>
+  </div>
+</section>
+
+<!-- ============ ANTIMICROBIALS ============ -->
+<section id="abx" class="hsec">
+  <div class="card">
+    <h2>Antibiotics and antifungals</h2>
+    <div class="warnbox small">Usual adult doses for planning only. Check against your local ICU antimicrobial guidance and the Trust formulary, use drug levels where stated, and get microbiology input. Renal and CVVHD doses vary by protocol.</div>
+    <div style="margin-top:10px"><label>Search drug or class</label><input type="search" id="aSearch" placeholder="e.g. meropenem, fluconazole, antifungal"></div>
+  </div>
+  <div id="aList"></div>
+</section>
+
+<!-- ============ RENAL ============ -->
+<section id="renal" class="hsec">
+  <div class="card">
+    <h2>Renal Drug Handbook (CRRT / CVVHD)</h2>
+    <div class="small muted">Excerpt from The Renal Drug Handbook, 5th ed. (UK Renal Pharmacy Group, CRC Press). The full 5th edition text is searched below. The curated CVVHD summaries above are from the earlier preview (A–Aspirin). The handbook says CAV/VVH dosing is the same as CAV/VVHD unless stated, and that CRRT dosing should be reviewed against the actual flux and GFR.</div>
+    <div style="margin-top:10px"><label>Search drug</label><input type="search" id="rSearch" placeholder="e.g. amikacin, aciclovir, ampicillin"></div>
+  </div>
+  <div id="rList"></div>
+  <div id="rFull" style="margin-top:12px"></div>
+  <div class="card small">
+    <b>CRRT flux method</b> (from the Handbook, ampicillin monograph): add blood flow, citrate, dialysate and replacement flow (mL/hr), divide by 60, and use the result as the patient's GFR in mL/min. Example: 100 + 1000 + 1000 + 200 mL/hr total 2200 mL/hr → GFR ≈ 36.7 mL/min. Then dose by GFR, not the dialysis recommendation.
+  </div>
+</section>
+
+<script>
+/* ================= WAKE LOCK ================= */
+let wakeLock=null;
+async function requestWake(){
+  const badge=document.getElementById('wakeBadge');
+  try{
+    if(!('wakeLock' in navigator)) throw new Error('unsupported');
+    wakeLock=await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release',()=>{updateWakeBadge(false)});
+    updateWakeBadge(true);
+  }catch(e){ updateWakeBadge(false,true); }
+}
+function updateWakeBadge(on,unsupported){
+  const b=document.getElementById('wakeBadge');
+  if(on){b.textContent='Screen stays on';b.className='badge on';}
+  else{b.textContent=unsupported?'Screen wake not available on this device':'Screen may sleep';b.className='badge';}
+}
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') requestWake(); });
+requestWake();
+
+/* ================= TABS ================= */
+document.querySelectorAll('#tabs button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('#tabs button').forEach(b=>{b.classList.remove('active','primary')});
+    btn.classList.add('active','primary');
+    document.querySelectorAll('.hsec').forEach(s=>s.classList.remove('on'));
+    document.getElementById(btn.dataset.tab).classList.add('on');
+    window.scrollTo({top:0});
+  });
+});
+
+/* ================= ARREST TIMER ================= */
+const A={ mode:'adult', running:false, t0:0, elapsed:0, cycleStart:0, cycleNum:0, shocks:0,
+  shockableLast:null, adrTimes:[], amioDoses:[], rosc:false, log:[], tick:null };
+const CYCLE=120;
+function fmt(s){s=Math.max(0,Math.floor(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function estWt(){const a=parseFloat(document.getElementById('arrestAge').value);if(!(a>=0)||A.mode!=='paed')return null;if(a<1)return (a*12+9)/2;if(a<=5)return 2*(a+4);if(a<=12)return 3*a+7;return null;}
+function wt(){const v=parseFloat(document.getElementById('arrestWt').value);if(v>0)return v;return estWt();}
+function wtSrc(){const v=parseFloat(document.getElementById('arrestWt').value);return v>0?'measured':(estWt()?'estimated from age':'');}
+function nowElapsed(){return A.running?(performance.now()-A.t0)/1000:A.elapsed;}
+function addLog(msg,kind,ref){const d=new Date();const e={id:String(Date.now())+Math.random().toString(36).slice(2,7),line:fmt(nowElapsed())+' ['+d.toLocaleTimeString('en-GB')+'] — '+msg,kind:kind||'',ref:ref||null};A.log.unshift(e);renderLog();}
+function deleteLog(id){const i=A.log.findIndex(e=>e.id===id);if(i<0)return;const e=A.log[i];A.log.splice(i,1);if(e.kind==='shock')A.shocks=Math.max(0,A.shocks-1);if(e.kind==='adr'&&e.ref){const j=A.adrTimes.indexOf(e.ref.t);if(j>=0)A.adrTimes.splice(j,1);}renderLog();renderPromptAndCycle();}
+function renderLog(){document.getElementById('log').innerHTML=A.log.length?A.log.map(e=>'<div class="tabular" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span>'+e.line+'</span><button data-del="'+e.id+'" style="min-height:28px;padding:2px 9px" aria-label="Delete entry">✕</button></div>').join(''):'<div class="muted">No events yet.</div>';}
+function setMode(m){
+  A.mode=m;
+  document.getElementById('modeAdult').classList.toggle('active',m==='adult');
+  document.getElementById('modePaed').classList.toggle('active',m==='paed');
+  document.getElementById('modeNote').textContent = m==='adult'
+    ? 'Adult: shock 150 J biphasic. Adrenaline 1 mg (1:10,000 = 10 mL) every 3–5 min. Amiodarone 300 mg then 150 mg.'
+    : 'Child: shock 4 J/kg. Adrenaline 10 mcg/kg (1:10,000 = 0.1 mL/kg, max 1 mg) every 3–5 min. Amiodarone 5 mg/kg (max 300 mg).';
+  document.getElementById('ageWrap').style.display=m==='paed'?'':'none';
+  renderDrugs();
+}
+function shockEnergy(){
+  if(A.mode==='adult') return '150 J';
+  const w=wt(); return w?Math.round(4*w)+' J (4 J/kg)':'4 J/kg';
+}
+function adrDoseInfo(){
+  const w=wt();
+  if(A.mode==='adult') return {mg:1, txt:'1 mg', vol:'10 mL of 1:10,000'};
+  if(!w) return {mg:null, txt:'10 mcg/kg', vol:'enter weight'};
+  const mcg=Math.min(10*w,1000);
+  return {mg:mcg/1000, txt:mcg.toFixed(0)+' mcg', vol:(mcg/100).toFixed(2)+' mL of 1:10,000 (0.1 mg/mL)'};
+}
+function amioInfo(){
+  const w=wt();
+  if(A.mode==='adult') return A.shocks>=4 ? {txt:'150 mg',vol:'second dose'} : {txt:'300 mg',vol:'first dose'};
+  if(!w) return {txt:'5 mg/kg',vol:'enter weight'};
+  const mg=Math.min(5*w,300);
+  return {txt:mg.toFixed(0)+' mg',vol:A.shocks>=4?'repeat dose':'first dose (max 300 mg)'};
+}
+function adrDue(){
+  if(!A.adrTimes.length) return null;
+  return A.adrTimes[A.adrTimes.length-1]+ (4*60);
+}
+function renderOther(){
+  const el=document.getElementById('otherDrugs'); if(!el) return;
+  const p=A.mode==='paed', w=wt();
+  let h='';
+  if(p){ h+='<div class="small muted">'+(w?'Weight used: <b>'+w.toFixed(1)+' kg</b> ('+wtSrc()+')':'Enter weight, or age for an estimate (1–12 years).')+'</div>'; }
+  else { h+='<div class="small muted">Adult doses</div>'; }
+  let rows=[];
+  if(p){
+    if(w) rows=[
+      ['Sodium bicarbonate 8.4%', w.toFixed(1)+' mL (1 mmol/kg)', 'Give slowly. Dilute 1:1 for neonates. Only with a clear indication.'],
+      ['Calcium chloride 10%', Math.min(0.2*w,10).toFixed(1)+' mL (0.2 mL/kg, max 10 mL)', 'Slow IV. Hyperkalaemia, hypocalcaemia. Central line preferred.'],
+      ['Calcium gluconate 10%', Math.min(0.5*w,20).toFixed(1)+' mL (0.5 mL/kg, max 20 mL)', 'Slow IV over 10 min or more. Check serum calcium 2 h after.'],
+      ['Insulin (soluble) IV', Math.min(0.1*w,10).toFixed(1)+' units (0.1 units/kg, max 10)', 'Hyperkalaemia. Give with dextrose. Check glucose hourly for 4–6 h.'],
+      ['Dextrose 10% (with insulin)', (5*w).toFixed(0)+' mL (0.5 g/kg)', 'Repeat capillary glucose hourly.'],
+      ['Glucose 10% (hypoglycaemia)', (2*w).toFixed(0)+' mL (2 mL/kg)', 'Recheck glucose after 10–15 min.']
+    ];
+  } else {
+    rows=[
+      ['Sodium bicarbonate 8.4%', '50 mL (50 mmol)', 'Slow IV. Hyperkalaemia, TCA toxicity or severe acidosis, only with a clear indication.'],
+      ['Calcium chloride 10%', '10 mL', 'Slow IV over at least 5 min. Central line preferred.'],
+      ['Calcium gluconate 10%', '10–20 mL', 'Hypocalcaemia: neat at 2 mL/min or less. Hyperkalaemia: 10 mL over at least 5 min. Continuous cardiac monitoring.'],
+      ['Insulin (soluble) IV', '10 units (5 units if low GFR, low weight or hypoglycaemia risk)', 'Give with 50 mL 50% dextrose (25 g). Check glucose hourly for 4–6 h.'],
+      ['Dextrose 50%', '50 mL (25 g)', 'Given with insulin in hyperkalaemia.'],
+      ['Glucose for hypoglycaemia', '200 mL 10% or 100 mL 20%', 'Recheck capillary glucose after 10–15 min.']
+    ];
+  }
+  window.LAST_OTHER=rows;
+  h+='<div class="scroll"><table><tr><th>Drug</th><th>Dose</th><th>Notes</th><th></th></tr>'+rows.map((r,i)=>'<tr><td><b>'+r[0]+'</b></td><td class="tabular">'+r[1]+'</td><td class="small muted">'+r[2]+'</td><td><button data-give="'+i+'"'+(A.running?'':' disabled')+'>Given</button></td></tr>').join('')+'</table></div>';
+  el.innerHTML=h;
+}
+function renderDrugs(){
+  const _e=estWt(), _m=parseFloat(document.getElementById('arrestWt').value);
+  document.getElementById('wtEst').textContent=(!(_m>0)&&_e)?'Estimated weight: '+_e.toFixed(1)+' kg (from age)':'';
+  renderOther();
+  const a=adrDoseInfo(), m=amioInfo();
+  document.getElementById('adrDose').textContent=a.txt;
+  document.getElementById('adrVol').textContent=a.vol;
+  document.getElementById('amioDose').textContent=m.txt;
+  document.getElementById('amioNext').textContent=m.vol;
+  document.getElementById('shockCount').textContent=A.shocks;
+  document.getElementById('energy').textContent=shockEnergy();
+  const due=adrDue(); const dueEl=document.getElementById('adrDue');
+  if(!A.adrTimes.length) dueEl.textContent= A.running ? 'Not yet given' : '';
+  else { const left=due-nowElapsed(); dueEl.textContent= left>0?'Next due in '+fmt(left):'Due now (repeat every 3–5 min)'; }
+}
+function renderPromptAndCycle(){
+  const el=nowElapsed();
+  const cyc=A.running? CYCLE-(el-A.cycleStart) : CYCLE;
+  const cycEl=document.getElementById('cycle');
+  cycEl.textContent=fmt(Math.max(0,cyc));
+  const pr=document.getElementById('prompt');
+  if(A.running && cyc<=0){
+    pr.hidden=false; pr.className='card flash';
+    pr.innerHTML='<h2>Pulse and rhythm check now</h2><div>Select the rhythm below.</div>';
+    cycEl.textContent='00:00';
+    document.getElementById('cycleSub').textContent='Rhythm check due';
+  } else {
+    pr.hidden=true; pr.className='card';
+    document.getElementById('cycleSub').textContent='Time to next rhythm check';
+  }
+  document.getElementById('clock').textContent=fmt(el);
+  document.getElementById('btnShock').disabled=!A.running||A.rosc;
+  document.getElementById('btnNonShock').disabled=!A.running||A.rosc;
+  document.getElementById('btnROSC').disabled=!A.running||A.rosc;
+  document.getElementById('btnCPR').disabled=!A.running||A.rosc;
+  document.getElementById('btnAdr').disabled=!A.running||A.rosc;
+  document.getElementById('btnAmio').disabled=!A.running||A.rosc;
+  const sd=document.getElementById('btnShockDel'); sd.hidden=!(A.running&&!A.rosc&&A.shockableLast); sd.textContent='Shock delivered ('+shockEnergy()+')'; sd.disabled=false;
+  renderDrugs();
+  const _ad=document.getElementById('adrDue'); _ad.textContent=adrAdv(); _ad.className=(adrAdv().indexOf('DUE')===0)?'flash':'';
+  const _an=document.getElementById('amioNext'); _an.textContent=amioAdv(); _an.className=(amioAdv().indexOf('DUE')===0)?'flash':'';
+  document.getElementById('cycleCount').textContent='Cycle '+A.cycleNum;
+}
+function adrAdv(){
+  if(!A.running) return 'First dose: non-shockable as soon as access is secured; shockable after the 2nd shock. Then every 3–5 min.';
+  if(A.rosc) return '';
+  if(!A.adrTimes.length) return (A.shocks>=2||A.shockableLast===false)?'DUE NOW — give adrenaline':'Due after 2nd shock (or now if non-shockable)';
+  const left=A.adrTimes[A.adrTimes.length-1]+240-nowElapsed();
+  return left>0?'Next dose due in '+fmt(left)+' (every 3–5 min)':'DUE NOW — repeat every 3–5 min';
+}
+function amioAdv(){
+  const n=A.log.filter(e=>e.kind==='amio').length;
+  if(!A.running) return 'Due after 3rd shock (adult 300 mg, then 150 mg; child 5 mg/kg, max 300 mg).';
+  if(A.rosc) return '';
+  if(A.shocks<3) return 'Due after 3rd shock';
+  if(n===0) return 'DUE NOW — '+(A.mode==='adult'?'300 mg':'5 mg/kg (max 300 mg)');
+  if(A.mode==='adult'&&n===1&&A.shocks>=4) return 'DUE — 150 mg';
+  if(A.mode==='adult'&&n===1) return 'Give 150 mg after next shock';
+  return 'Further doses per local protocol';
+}
+function startArrest(){
+  if(A.running) return;
+  A.running=true; A.t0=performance.now()-A.elapsed*1000; A.cycleStart=A.elapsed; A.cycleNum=1; A.rosc=false;
+  addLog('Arrest started (cycle 1)');
+  document.getElementById('startBtn').textContent='Pause';
+  if(!A.tick) A.tick=setInterval(renderPromptAndCycle,250);
+  renderPromptAndCycle();
+}
+function pauseArrest(){
+  if(!A.running) return;
+  A.elapsed=nowElapsed(); A.running=false;
+  document.getElementById('startBtn').textContent='Resume';
+  renderPromptAndCycle();
+}
+function startNextCycle(){ A.cycleStart=nowElapsed(); A.cycleNum++; }
+function rhythmShockable(){
+  if(!A.running) return;
+  A.shockableLast=true;
+  addLog('Shockable rhythm — charge defibrillator ('+shockEnergy()+')');
+  renderPromptAndCycle();
+}
+function shockDelivered(){
+  if(!A.running||!A.shockableLast) return;
+  A.shocks++;
+  A.shockableLast=null;
+  let msg='Shockable — shock '+A.shocks+' ('+shockEnergy()+')';
+  if(A.mode==='adult' && A.shocks===3) msg+='. Consider amiodarone 300 mg after this shock';
+  if(A.mode==='adult' && A.shocks===4) msg+='. Amiodarone 150 mg';
+  if(A.shocks===2) msg+='. Give adrenaline now';
+  addLog(msg,'shock');
+  startNextCycle();
+  renderPromptAndCycle();
+}
+function rhythmNonShock(){
+  if(!A.running) return;
+  A.shockableLast=false;
+  let msg='Non-shockable (PEA/asystole) — CPR continues';
+  if(!A.adrTimes.length) msg+='. Give adrenaline as soon as access is secured';
+  addLog(msg);
+  startNextCycle();
+  renderPromptAndCycle();
+}
+function giveAdr(){
+  if(!A.running) return;
+  const t=nowElapsed(); A.adrTimes.push(t);
+  addLog('Adrenaline given — '+adrDoseInfo().txt,'adr',{t:t});
+  renderPromptAndCycle();
+}
+function giveAmio(){
+  if(!A.running) return;
+  const m=amioInfo();
+  addLog('Amiodarone given — '+m.txt,'amio');
+  renderPromptAndCycle();
+}
+function markROSC(){
+  if(!A.running) return;
+  A.rosc=true; A.running=false; A.elapsed=nowElapsed();
+  addLog('ROSC (pulse returns) at '+fmt(A.elapsed));
+  document.getElementById('startBtn').textContent='Start arrest';
+  renderPromptAndCycle();
+  document.getElementById('rhythmInfo').textContent='ROSC achieved. Begin post-ROSC care: 12-lead ECG, oxygen to SpO2 94–98%, MAP target, and temperature control.';
+}
+document.getElementById('startBtn').addEventListener('click',()=>{ A.running? pauseArrest() : startArrest(); });
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  pauseArrest();
+  Object.assign(A,{elapsed:0,cycleStart:0,cycleNum:0,shocks:0,shockableLast:null,adrTimes:[],amioDoses:[],rosc:false,log:[],running:false});
+  clearInterval(A.tick); A.tick=null;
+  document.getElementById('startBtn').textContent='Start arrest';
+  document.getElementById('rhythmInfo').textContent='';
+  renderLog(); renderPromptAndCycle();
+});
+document.getElementById('modeAdult').addEventListener('click',()=>setMode('adult'));
+document.getElementById('modePaed').addEventListener('click',()=>setMode('paed'));
+document.getElementById('arrestWt').addEventListener('input',renderDrugs);
+document.getElementById('arrestAge').addEventListener('input',renderDrugs);
+document.getElementById('btnShock').addEventListener('click',rhythmShockable);
+document.getElementById('btnShockDel').addEventListener('click',shockDelivered);
+document.getElementById('btnNonShock').addEventListener('click',rhythmNonShock);
+document.getElementById('btnAdr').addEventListener('click',giveAdr);
+document.getElementById('btnAmio').addEventListener('click',giveAmio);
+document.getElementById('btnROSC').addEventListener('click',markROSC);
+document.getElementById('btnCPR').addEventListener('click',()=>addLog('CPR restarted'));
+renderLog(); renderPromptAndCycle(); setMode('adult');
+document.getElementById('log').addEventListener('click',ev=>{const b=ev.target.closest('[data-del]');if(b)deleteLog(b.dataset.del);});
+document.getElementById('otherDrugs').addEventListener('click',ev=>{const b=ev.target.closest('[data-give]');if(!b||!A.running)return;const r=window.LAST_OTHER[+b.dataset.give];addLog(r[0]+' given — '+r[1],'other');renderPromptAndCycle();});
+
+/* ================= WETFLAG ================= */
+function renderWetflag(){
+  const age=parseFloat(document.getElementById('wfAge').value);
+  let w=parseFloat(document.getElementById('wfWt').value);
+  let wsrc='measured';
+  if(!(w>0) && age>=1 && age<=5){ w=(age+4)*2; wsrc='estimated'; }
+  const rows=[];
+  rows.push(['Weight', w>0?w.toFixed(1)+' kg':'—', wsrc==='measured'?'Measured':(w>0?'Estimated (age+4)×2':'Enter age 1–5 or weight')]);
+  if(w>0){
+    rows.push(['Energy (defib)', (4*w).toFixed(0)+' J', '4 J/kg (shock 1 and subsequent shocks)']);
+  }
+  if(age>0){
+    rows.push(['ETT cuffed', (age/4+3.5).toFixed(1)+' mm', 'age/4 + 3.5']);
+    rows.push(['ETT uncuffed', (age/4+4).toFixed(1)+' mm', 'age/4 + 4']);
+  }
+  if(w>0){
+    const etts = age>0 ? (age/4+3.5) : null;
+    if(etts) rows.push(['ETT oral depth', (3*etts).toFixed(1)+' cm', '3 × cuffed ETT size']);
+    rows.push(['Fluid bolus', (10*w).toFixed(0)+' mL', '10 mL/kg (may give 20 mL/kg with review)']);
+    rows.push(['Adrenaline 1:10,000', (10*w).toFixed(0)+' mcg = '+(0.1*w).toFixed(2)+' mL', '10 mcg/kg (max 1 mg)']);
+    rows.push(['Atropine', (20*w).toFixed(0)+' mcg (min 100)', '20 mcg/kg']);
+    rows.push(['Glucose 10%', (2*w).toFixed(0)+' mL', '2 mL/kg (= 0.2 g/kg)']);
+    rows.push(['Amiodarone', (5*w).toFixed(0)+' mg (max 300)', '5 mg/kg']);
+    rows.push(['Magnesium 50%', (0.2*w).toFixed(1)+' mL (50 mg/kg, max 2 g)', '25–50 mg/kg']);
+  }
+  let html='<tr><th>Item</th><th>Value</th><th>Calculation</th></tr>';
+  rows.forEach(r=>{html+='<tr><td>'+r[0]+'</td><td class="tabular"><b>'+r[1]+'</b></td><td class="muted small">'+r[2]+'</td></tr>';});
+  document.getElementById('wfTable').innerHTML=html;
+}
+['wfAge','wfWt'].forEach(id=>document.getElementById(id).addEventListener('input',renderWetflag));
+renderWetflag();
+
+/* ================= IBW / BMI ================= */
+function ibw(){
+  const sex=document.getElementById('ibwSex').value;
+  const cm=parseFloat(document.getElementById('ibwHt').value);
+  if(!(cm>0)) return null;
+  const inches=cm/2.54;
+  return sex==='m' ? 50+2.3*(inches-60) : 45.5+2.3*(inches-60);
+}
+function renderIbw(){
+  const i=ibw(); const act=parseFloat(document.getElementById('ibwAct').value);
+  document.getElementById('ibwOut').textContent = i? i.toFixed(1):'—';
+  const cm=parseFloat(document.getElementById('ibwHt').value);
+  const bmi = (cm>0 && act>0)? act/Math.pow(cm/100,2):null;
+  document.getElementById('bmiOut').textContent = bmi? bmi.toFixed(1):'—';
+  let note='';
+  if(bmi && bmi>30) note='BMI over 30: the guide says to dose alfentanil and remifentanil on IBW in obesity. Aminophylline also uses IBW.';
+  document.getElementById('ibwNote').textContent=note;
+}
+['ibwSex','ibwHt','ibwAct'].forEach(id=>document.getElementById(id).addEventListener('input',renderIbw));
+renderIbw();
+
+/* ================= QUICK CALC ================= */
+function renderQC(){
+  const d=parseFloat(document.getElementById('qcDose').value);
+  const c=parseFloat(document.getElementById('qcConc').value);
+  const out=document.getElementById('qcOut');
+  if(d>0 && c>0){
+    const v=d/c;
+    document.getElementById('qcVol').textContent=v.toFixed(2)+' mL';
+    out.innerHTML='Check: '+d+' mg ÷ '+c+' mg/mL = <b>'+v.toFixed(2)+' mL</b>. Draw up and confirm the label before giving.';
+  } else {
+    document.getElementById('qcVol').textContent='—';
+    out.textContent='';
+  }
+}
+['qcDose','qcConc'].forEach(id=>document.getElementById(id).addEventListener('input',renderQC));
+
+/* ================= INFUSIONS ================= */
+/* base: amount unit of the drug (mcg | mg | units). per: 'kg/min','kg/hr','min','hr' . perKg: dose per kg?
+   presets: total amount (base unit) in total volume (mL) with make-up note. guide: range (low,high) in the dose unit.
+   basis: 'actual' | 'ideal' | 'fixed' (not weight dependent) */
+const INF=[
+ {name:'Noradrenaline', base:'mcg', unit:'mcg/kg/min', perKg:true, per:'min', basis:'actual', range:[0,1], central:true,
+  presets:[
+    {label:'80 mcg/mL — 8 mg in 100 mL', amount:8000, vol:100, note:'8 mg in 100 mL (80 mcg/mL). Central only.'},
+    {label:'80 mcg/mL — 20 mg in 250 mL', amount:20000, vol:250, note:'20 mg in 250 mL (80 mcg/mL). Central only.'},
+    {label:'80 mcg/mL — 40 mg in 500 mL', amount:40000, vol:500, note:'40 mg in 500 mL (80 mcg/mL). Central only.'}]},
+ {name:'Adrenaline', base:'mcg', unit:'mcg/kg/min', perKg:true, per:'min', basis:'actual', range:[0,1], central:true,
+  presets:[
+    {label:'80 mcg/mL — 8 mg in 100 mL', amount:8000, vol:100, note:'8 mg in 100 mL (80 mcg/mL). Central only.'},
+    {label:'80 mcg/mL — 40 mg in 500 mL', amount:40000, vol:500, note:'40 mg in 500 mL (80 mcg/mL). Central only.'}]},
+ {name:'Vasopressin', base:'units', unit:'units/min', perKg:false, per:'min', basis:'fixed', range:[0.01,0.04], central:true,
+  presets:[
+    {label:'0.4 units/mL — 20 units in 50 mL', amount:20, vol:50, note:'20 units in 50 mL (0.4 units/mL). Central only. Dose independent of weight.'}]},
+ {name:'Dobutamine', base:'mcg', unit:'mcg/kg/min', perKg:true, per:'min', basis:'actual', range:[2.5,10],
+  presets:[
+    {label:'2.5 mg/mL — 250 mg in 100 mL', amount:250000, vol:100, note:'250 mg in 100 mL (2.5 mg/mL).'},
+    {label:'5 mg/mL — 250 mg in 50 mL (central)', amount:250000, vol:50, note:'250 mg in 50 mL (5 mg/mL). Central only. Up to 20 mcg/kg/min in some circumstances.'}]},
+ {name:'Dopamine', base:'mcg', unit:'mcg/kg/min', perKg:true, per:'min', basis:'actual', range:[2,10],
+  presets:[
+    {label:'2 mg/mL — 200 mg in 100 mL', amount:200000, vol:100, note:'200 mg in 100 mL (2 mg/mL). Peripheral for 1 h max.'}]},
+ {name:'Alfentanil', base:'mcg', unit:'mcg/kg/min', perKg:true, per:'min', basis:'actual', range:[0.5,1],
+  presets:[
+    {label:'500 mcg/mL — 25 mg in 50 mL (neat)', amount:25000, vol:50, note:'25 mg in 50 mL (0.5 mg/mL). Given neat. Dose by IBW in obesity.'}]},
+ {name:'Remifentanil', base:'mcg', unit:'mcg/kg/min', perKg:true, per:'min', basis:'actual', range:[0.007,0.75],
+  presets:[
+    {label:'100 mcg/mL — 5 mg in 50 mL', amount:5000, vol:50, note:'5 mg in 50 mL (100 mcg/mL). Max 250 mcg/mL. Boluses not permitted. Dedicated line. Use IBW if obese. Start at 0.1 mcg/kg/min.'}]},
+ {name:'Fentanyl', base:'mcg', unit:'mcg/kg/hr', perKg:true, per:'hr', basis:'actual', range:[0.5,4],
+  presets:[
+    {label:'50 mcg/mL — 2.5 mg in 50 mL', amount:2500, vol:50, note:'2.5 mg in 50 mL (50 mcg/mL). Doses up to 10 mcg/kg/hr used.'}]},
+ {name:'Midazolam', base:'mg', unit:'mg/hr', perKg:false, per:'hr', basis:'fixed', range:[1,10],
+  presets:[
+    {label:'1 mg/mL — 50 mg in 50 mL', amount:50, vol:50, note:'50 mg in 50 mL (1 mg/mL). Given neat. Rarely up to 20 mg/hr. Accumulates in renal/hepatic impairment.'}]},
+ {name:'Propofol', base:'mg', unit:'mg/kg/hr', perKg:true, per:'hr', basis:'actual', range:[1,4],
+  presets:[
+    {label:'10 mg/mL (1%)', amount:10, vol:1, note:'Neat 1% (10 mg/mL). Monitor triglycerides if >3 days.'},
+    {label:'20 mg/mL (2%)', amount:20, vol:1, note:'Neat 2% (20 mg/mL). Monitor triglycerides if >3 days.'}]},
+ {name:'Dexmedetomidine', base:'mcg', unit:'mcg/kg/hr', perKg:true, per:'hr', basis:'actual', range:[0.7,1.4],
+  presets:[
+    {label:'20 mcg/mL — 1 mg in 50 mL', amount:1000, vol:50, note:'1 mg in 50 mL (20 mcg/mL). Wean to stop. Watch bradycardia/hypotension.'}]},
+ {name:'Clonidine', base:'mcg', unit:'mcg/kg/hr', perKg:true, per:'hr', basis:'actual', range:[0.5,2],
+  presets:[
+    {label:'15 mcg/mL — 750 mcg in 50 mL', amount:750, vol:50, note:'750 mcg in 50 mL (15 mcg/mL). Titrate slowly; watch BP and HR. Wean to stop.'}]},
+ {name:'Ketamine', base:'mg', unit:'mg/kg/hr', perKg:true, per:'hr', basis:'actual', range:[0.5,2.5],
+  presets:[
+    {label:'2 mg/mL (peripheral) — 1000 mg in 500 mL', amount:1000, vol:500, note:'1000 mg in 500 mL (2 mg/mL). Peripheral.'},
+    {label:'Neat (central) — 1000 mg in 20 mL', amount:1000, vol:20, note:'1000 mg in 20 mL syringe (50 mg/mL). Central, neat.'}]},
+ {name:'Atracurium', base:'mg', unit:'mg/kg/hr', perKg:true, per:'hr', basis:'actual', range:[0.3,0.6],
+  presets:[
+    {label:'10 mg/mL — neat', amount:10, vol:1, note:'Give undiluted (10 mg/mL). Ensure adequate sedation.'}]},
+ {name:'Rocuronium', base:'mg', unit:'mg/kg/hr', perKg:true, per:'hr', basis:'actual', range:[0.3,0.6],
+  presets:[
+    {label:'10 mg/mL — neat', amount:10, vol:1, note:'Neat 10 mg/mL. Maintenance 0.3–0.6 mg/kg/hr for first hour, then titrate.'}]},
+ {name:'Labetalol', base:'mg', unit:'mg/hr', perKg:false, per:'hr', basis:'fixed', range:[15,120],
+  presets:[
+    {label:'1 mg/mL (standard) — 50 mg in 50 mL', amount:50, vol:50, note:'Standard 1 mg/mL. Use 2 mg/mL if fluid restricted (100 mg in 50 mL). Central neat 5 mg/mL.'}]},
+ {name:'Glyceryl trinitrate (GTN)', base:'mg', unit:'mg/hr', perKg:false, per:'hr', basis:'fixed', range:[0.6,10],
+  presets:[
+    {label:'1 mg/mL — 50 mg in 50 mL', amount:50, vol:50, note:'50 mg in 50 mL (1 mg/mL). Central preferred. Change after 24 h. Max 3 days.'}]},
+ {name:'Furosemide', base:'mg', unit:'mg/hr', perKg:false, per:'hr', basis:'fixed', range:[1,10],
+  presets:[
+    {label:'1 mg/mL — 50 mg in 50 mL', amount:50, vol:50, note:'50 mg in 50 mL (1 mg/mL). Max 4 mg/min. Alkaline, incompatible with dextrose 5%.'}]},
+ {name:'Salbutamol', base:'mcg', unit:'mcg/min', perKg:false, per:'min', basis:'fixed', range:[3,20],
+  presets:[
+    {label:'10 mcg/mL — 5 mg in 500 mL', amount:5000, vol:500, note:'5 mg in 500 mL (10 mcg/mL). Initial 5 mcg/min then titrate.'},
+    {label:'200 mcg/mL — 10 mg in 50 mL', amount:10000, vol:50, note:'Concentrated 10 mg in 50 mL dextrose 5% (200 mcg/mL). Central or peripheral.'}]},
+ {name:'Metaraminol', base:'mg', unit:'mg/hr', perKg:false, per:'hr', basis:'fixed', range:[0,10],
+  presets:[
+    {label:'0.5 mg/mL — 10 mg in 20 mL', amount:10, vol:20, note:'10 mg in 20 mL (0.5 mg/mL). 0–10 mg/hr = 0–20 mL/hr. Short term without central line.'}]},
+ {name:'Aminophylline', base:'mg', unit:'mg/kg/hr', perKg:true, per:'hr', basis:'ideal', range:[0.3,0.7],
+  presets:[
+    {label:'10 mg/mL — 500 mg in 50 mL', amount:500, vol:50, note:'500 mg in 50 mL (10 mg/mL). Maintenance 300–700 mcg/kg/hr per guide. Use IBW in obesity. Adjust to serum theophylline.'}]},
+ {name:'Heparin (CVVH/HF)', base:'units', unit:'units/hr', perKg:false, per:'hr', basis:'fixed', range:[500,1500],
+  presets:[
+    {label:'1000 units/mL — 40,000 units in 40 mL', amount:40000, vol:40, note:'40,000 units in 40 mL (1000 units/mL). CVVH/HF: 500 units/hr (max 1500). APTTr <2 for CVVH/HF.'}]}
+];
+const CATS={Noradrenaline:['c-pressor','Pressor'],Adrenaline:['c-pressor','Pressor / inotrope'],Vasopressin:['c-pressor','Pressor'],Dobutamine:['c-pressor','Inotrope'],Dopamine:['c-pressor','Pressor / inotrope'],Metaraminol:['c-pressor','Pressor'],Atracurium:['c-para','Paralysis'],Rocuronium:['c-para','Paralysis'],Midazolam:['c-sed','Sedative'],Propofol:['c-sed','Sedative'],Dexmedetomidine:['c-sed','Sedative'],Clonidine:['c-sed','Sedative'],Ketamine:['c-sed','Sedative'],Alfentanil:['c-opi','Opiate'],Remifentanil:['c-opi','Opiate'],Fentanyl:['c-opi','Opiate']};
+INF.forEach(d=>{const c=CATS[d.name]; d.cls=c?c[0]:''; d.catName=c?c[1]:'';});
+const selDrug=document.getElementById('infDrug'), selConc=document.getElementById('infConc');
+const CATCOL={'c-pressor':'#f8d7e6','c-para':'#f9d6d5','c-sed':'#fff3c4','c-opi':'#d6e8fb'};
+INF.forEach((d,i)=>{const o=document.createElement('option');o.value=i;o.textContent=d.name;o.style.background=CATCOL[d.cls]||'';o.style.color=d.cls?'#15202b':'';selDrug.appendChild(o);});
+let infMode='fwd';
+function curDrug(){return INF[parseInt(selDrug.value,10)];}
+function curPreset(){return curDrug().presets[parseInt(selConc.value,10)||0];}
+function fillConc(){
+  selDrug.style.background=CATCOL[curDrug().cls]||'';
+  selDrug.style.color=curDrug().cls?'#15202b':'';
+  document.getElementById('infCat').innerHTML=curDrug().cls?'<span class="cat '+curDrug().cls+'">'+curDrug().catName+'</span>':'';
+  selConc.innerHTML='';
+  curDrug().presets.forEach((p,i)=>{const o=document.createElement('option');o.value=i;o.textContent=p.label;selConc.appendChild(o);});
+  const d=curDrug();
+  document.getElementById('infBasis').value=d.basis==='ideal'?'ideal':'actual';
+  document.getElementById('infBasis').disabled = d.basis==='fixed';
+  document.getElementById('infWt').disabled = d.basis==='fixed';
+  renderInf();
+}
+function patientWt(){
+  const d=curDrug();
+  if(d.basis==='fixed') return 1;
+  const act=parseFloat(document.getElementById('infWt').value);
+  if(!(act>0)) return null;
+  if(document.getElementById('infBasis').value!=='ideal') return act;
+  const i=ibw(); return i? i : act;
+}
+function concMgPerMl(p){ return p.amount / p.vol; } /* base units per mL */
+function renderInf(){
+  const d=curDrug(), p=curPreset();
+  document.getElementById('infMake').textContent=p.note;
+  const wtOk=patientWt();
+  const rateLbl = document.getElementById('infRateLbl');
+  const tgtLbl = document.getElementById('infTargetLbl');
+  const unitBase = d.unit;
+  document.getElementById('infOutLbl').textContent=(infMode==='fwd'?'Delivered dose':'Rate needed');
+  const cm=concMgPerMl(p);
+  const baseLabel = d.base;
+  const wt = wtOk||null;
+  const ratePer = d.per==='min'?60:1;
+  const outDiv = document.getElementById('infOut'), work=document.getElementById('infWork'), flag=document.getElementById('infFlag');
+  flag.innerHTML='';
+  if(infMode==='fwd'){
+    rateLbl.textContent='Rate (mL/hr)';
+    document.getElementById('infRevBox').style.display='none';
+    const rate=parseFloat(document.getElementById('infRate').value);
+    if(!(rate>=0) || (d.perKg && !wt)){ outDiv.textContent='—'; work.textContent= d.perKg?'Enter patient weight and rate.':'Enter a rate.'; return; }
+    // amount per time (base unit per time)
+    let perHr = cm*rate;
+    let perUnit = perHr/ratePer; // per min if per min
+    let value = d.perKg ? perUnit/wt : perUnit; // base per min or per hr per kg
+    // convert mcg to mg when unit is mg/kg/hr or mg/hr
+    let shown=value, label=d.unit;
+    if(d.unit.indexOf('mg/')===0 || d.unit.indexOf('/hr')>=0 && baseLabel==='mg'){ /* base mg already */ }
+    outDiv.textContent=shown.toFixed(shown<0.1?3:2)+' '+d.unit;
+    work.innerHTML = 'Working: '+cm.toFixed(3)+' '+baseLabel+'/mL × '+rate+' mL/hr ÷ '+ratePer+' '+(d.per==='min'?'(min)':'')+(d.perKg?' ÷ '+wt.toFixed(1)+' kg':'')+' = <b>'+shown.toFixed(3)+' '+d.unit+'</b>'+(d.basis!=='fixed'?' · '+(document.getElementById('infBasis').value==='ideal'?'IBW':'actual')+' weight':'');
+    if(d.range){ const lo=d.range[0],hi=d.range[1]; if(shown<lo) flag.innerHTML='<div class="warnbox small">Below the guide range ('+lo+'–'+hi+' '+d.unit+').</div>'; else if(shown>hi) flag.innerHTML='<div class="critbox small">Above the guide range ('+lo+'–'+hi+' '+d.unit+'). Check the prescription.</div>'; else flag.innerHTML='<div class="okbox small">Within the guide range ('+lo+'–'+hi+' '+d.unit+').</div>'; }
+  } else {
+    rateLbl.textContent='Rate (mL/hr)';
+    tgtLbl.textContent='Target dose ('+d.unit+')';
+    document.getElementById('infRevBox').style.display='block';
+    const target=parseFloat(document.getElementById('infTarget').value);
+    if(!(target>=0) || (d.perKg && !wt)){ outDiv.textContent='—'; work.textContent=d.perKg?'Enter weight and target.':'Enter a target dose.'; return; }
+    // target per hr in base units
+    const basePerUnit = d.perKg ? target*wt : target; // base per (min or hr)
+    const basePerHr = basePerUnit*ratePer;
+    const rate = basePerHr/cm;
+    outDiv.textContent=rate.toFixed(2)+' mL/hr';
+    work.innerHTML='Working: '+target+' '+d.unit+(d.perKg?' × '+wt.toFixed(1)+' kg':'')+' = '+basePerUnit.toFixed(2)+' '+baseLabel+'/'+(d.per==='min'?'min':'hr')+' ÷ '+cm.toFixed(3)+' '+baseLabel+'/mL = <b>'+rate.toFixed(2)+' mL/hr</b>';
+    // quick check back-calc
+    flag.innerHTML='<div class="okbox small">Check: set pump to '+rate.toFixed(2)+' mL/hr, then switch to Rate → dose to confirm the same number.</div>';
+  }
+}
+function setInfMode(m){
+  infMode=m;
+  document.getElementById('modeFwd').classList.toggle('active',m==='fwd');
+  document.getElementById('modeRev').classList.toggle('active',m==='rev');
+  document.getElementById('infRate').parentElement.style.display= m==='fwd'?'block':'none';
+  renderInf();
+}
+selDrug.addEventListener('change',fillConc);
+selConc.addEventListener('change',renderInf);
+['infWt','infRate','infTarget','infBasis'].forEach(id=>document.getElementById(id).addEventListener('input',renderInf));
+document.getElementById('infBasis').addEventListener('change',renderInf);
+document.getElementById('modeFwd').addEventListener('click',()=>setInfMode('fwd'));
+document.getElementById('modeRev').addEventListener('click',()=>setInfMode('rev'));
+// infusion reference table
+(function(){
+  let h='<tr><th>Drug</th><th>Rate (guide)</th><th>Make-up</th><th>Notes</th></tr>';
+  INF.forEach(d=>{
+    h+='<tr><td><span class="cat '+d.cls+'"><b>'+d.name+'</b></span></td><td class="tabular">'+d.range[0]+'–'+d.range[1]+' '+d.unit+'</td><td class="small">'+d.presets.map(p=>p.label).join('<br>')+'</td><td class="small muted">'+(d.central?'Central only':'')+'</td></tr>';
+  });
+  document.getElementById('infTable').innerHTML=h;
+})();
+fillConc(); setInfMode('fwd');
+
+/* ================= RENAL ================= */
+const RENAL=[
+ {d:'Acetylcysteine (IV)', cvvhd:'Likely dialysed. Dose as in normal renal function.', dose:'Normal dose. Renal protection: 1 g IV in 500 mL NaCl 0.9% or dextrose 5%, the day before and day of scan.', note:'Minimum dilutions 100–250 mL. Strong solutions best given centrally.'},
+ {d:'Aciclovir IV', cvvhd:'Dialysed. CAV/VVHD/HDF: dose as GFR 10–25 mL/min.', dose:'GFR 25–50: 5–10 mg/kg q12h. GFR 10–25: 5–10 mg/kg q24h (some use 3.5–7 mg/kg q24h). GFR <10: 2.5–5 mg/kg q24h.', note:'Infuse over 1 h; can worsen renal impairment if rapid. Do not refrigerate. Monitor levels in critically ill; neurotoxicity reported.'},
+ {d:'Adenosine', cvvhd:'Not dialysed. Dose as in normal renal function.', dose:'Normal dose (rapid IV bolus).', note:'Not renally or hepatically cleared. Effect enhanced by dipyridamole, reduced by xanthines.'},
+ {d:'Adrenaline (epinephrine)', cvvhd:'Not dialysed. Dose as in normal renal function.', dose:'Normal dose: 0.01–1 mcg/kg/min.', note:'Not dialysed.'},
+ {d:'Alfentanil', cvvhd:'Not dialysed. Dose as in normal renal function.', dose:'Normal dose.', note:'Dose by IBW in obesity (per guide).'},
+ {d:'Allopurinol', cvvhd:'Dialysed. GFR 10–20 mL/min dosing.', dose:'GFR 10–20: 100–200 mg daily. GFR <10: 100 mg daily or alternate days. Dialysis: 300 mg post dialysis (alt days).', note:'Oxipurinol accumulates and is dialysed.'},
+ {d:'Alteplase (rt-PA)', cvvhd:'Not dialysed. Dose as in normal renal function.', dose:'Normal dose. Myocardial infarction: 15 mg bolus, 50 mg/30 min, 35 mg/1 h. Reduce if <65 kg.', note:'Also used to unblock dialysis lines.'},
+ {d:'Amikacin', cvvhd:'Dialysed. 7.5 mg/kg every 24 h and monitor levels.', dose:'CVVHD: 7.5 mg/kg q24h. Dialysis (HD/HDF): 5 mg/kg after dialysis. GFR 10–20: 3–4 mg/kg q24h. GFR <10: 2 mg/kg q24–48h.', note:'Peak target <30 mg/L; trough <5 mg/L. Nephrotoxic and ototoxic. Volume of distribution increases with oedema or ascites.'},
+ {d:'Aminophylline', cvvhd:'Not dialysed. Dose as in GFR 10–20 mL/min. Monitor levels.', dose:'IV load 5 mg/kg (250–500 mg). Maintenance 0.5–0.7 mg/kg/hr adjusted to levels. GFR <10: monitor levels.', note:'Monitor theophylline levels. Use IBW in obesity.'},
+ {d:'Amiodarone', cvvhd:'Not dialysed. Dose as in normal renal function.', dose:'Normal dose.', note:'Very little urinary excretion. Many interactions (QT, digoxin, warfarin).'},
+ {d:'Amlodipine', cvvhd:'Not dialysed. Dose as in normal renal function.', dose:'Normal dose.', note:'Extensively metabolised by liver.'},
+ {d:'Amoxicillin', cvvhd:'Dialysed. Dose as in normal renal function.', dose:'Normal: 250 mg–1 g q8h (max 6 g/day; up to 12 g in endocarditis). HD: dialysed, dose as GFR <10.', note:'Renal clearance ~60% unchanged.'},
+ {d:'Ampicillin', cvvhd:'Dialysed. CRRT: GFR 10–20 mL/min guidance; use flux method.', dose:'GFR 10–20: 250 mg–2 g q6h. GFR <10: 250 mg–1 g q6h. IV: slow bolus over 3–4 min, or infuse over 30–60 min if >500 mg.', note:'CRRT: total flux (blood flow + citrate + dialysate + replacement, mL/hr) ÷ 60 = GFR (mL/min). E.g. 2200 mL/hr ÷ 60 ≈ 36.7 mL/min. Nephrotoxic if not reduced. Do not mix with aminoglycosides.'},
+ {d:'Anastrozole', cvvhd:'Dialysed. Dose as in normal renal function.', dose:'1 mg daily (normal).', note:'Not clinically significantly dialysed.'},
+ {d:'Anidulafungin', cvvhd:'Not dialysed. Dose as in normal renal function.', dose:'Normal dose. Add 100 mg to 250 mL or 200 mg to 500 mL. Infuse at 1.1 mg/min.', note:'Negligible renal clearance.'},
+ {d:'Apixaban', cvvhd:'Unknown dialysability. Dose as in GFR 15–30 mL/min.', dose:'Normal dose: AF 2.5–5 mg twice daily; post-surgery 2.5 mg twice daily.', note:'Use with caution if GFR <15.'},
+ {d:'Argatroban', cvvhd:'Not dialysed. Dose as in normal renal function.', dose:'2 mcg/kg/min (max 10). Haemodialysis / CRRT anticoagulation: bolus 250 mcg/kg then 2 mcg/kg/min, stop 1 h post-dialysis (guide per monograph).', note:'Adjust to APTT. Hepatic clearance; no renal adjustment.'},
+ {d:'Aspirin', cvvhd:'Dialysed. Dose as in normal renal function.', dose:'Normal: 75–300 mg daily (prophylaxis). Analgesia 300–900 mg q4h.', note:'Renal excretion: GFR-dependent. Monitor in renal impairment.'}
+];
+function renderRenal(){
+  const q=document.getElementById('rSearch').value.trim().toLowerCase();
+  const list=RENAL.filter(x=>!q || x.d.toLowerCase().includes(q) || x.dose.toLowerCase().includes(q) || x.note.toLowerCase().includes(q));
+  if(!list.length){document.getElementById('rList').innerHTML='<div class="card muted">No match in the supplied excerpt. Check the full handbook.</div>';return;}
+  document.getElementById('rList').innerHTML=list.map(x=>
+    '<div class="card"><h2>'+x.d+'</h2>'
+    +'<div class="kv small"><div>CVVHD</div><div>'+x.cvvhd+'</div><div>Dose</div><div>'+x.dose+'</div><div>Notes</div><div>'+x.note+'</div></div></div>').join('');
+}
+document.getElementById('rSearch').addEventListener('input',renderRenal);
+
+const ABX=[
+ {d:'Piperacillin-tazobactam',c:'Antibiotic (penicillin + BLI)',use:'Sepsis, intra-abdominal, hospital-acquired pneumonia',dose:'4.5 g IV q6–8h (extended infusion per local policy)',ren:'CrCl 20–40: 2.25–4.5 g q6–8h. CrCl <20: 2.25 g q8h. CVVHD: typically 2.25–4.5 g q6–8h per protocol.',note:'Check for rash and neutropenia. Avoid with other nephrotoxins where possible.'},
+ {d:'Meropenem',c:'Antibiotic (carbapenem)',use:'Severe sepsis, ESBL, intra-abdominal, meningitis (2 g)',dose:'1 g IV q8h (2 g for meningitis)',ren:'CrCl 26–50: 1 g q12h. CrCl 10–25: 500 mg q12h. CrCl <10: 500 mg q24h. CVVHD: 1 g q8–12h.',note:'Reserve for ESBL or resistant organisms. Seizure risk with high levels.'},
+ {d:'Ertapenem',c:'Antibiotic (carbapenem)',use:'Community or ESBL-producing Enterobacterales, intra-abdominal (no Pseudomonas cover)',dose:'1 g IV q24h',ren:'CrCl <30: 500 mg q24h.',note:'Does not cover Pseudomonas or Acinetobacter.'},
+ {d:'Vancomycin',c:'Antibiotic (glycopeptide)',use:'MRSA, serious Gram-positive infection, C. difficile (oral only)',dose:'Load 25 mg/kg (max 2 g); maintenance by level or AUC per protocol',ren:'Dose by levels. CVVHD: higher maintenance doses are often needed; check levels daily (see MEDUSA continuous infusion guide).',note:'Nephrotoxic and ototoxic. Trough or AUC monitoring. Continuous infusion: 1 g in 200 mL.'},
+ {d:'Teicoplanin',c:'Antibiotic (glycopeptide)',use:'MRSA, Gram-positive infection (alternative to vancomycin)',dose:'Load 12 mg/kg q12h for 3 doses, then 6–12 mg/kg q24h',ren:'Adjust by trough level. Long half-life in renal impairment.',note:'Monitor trough levels. Hypersensitivity can occur.'},
+ {d:'Linezolid',c:'Antibiotic (oxazolidinone)',use:'MRSA, VRE, pneumonia and skin infections',dose:'600 mg IV/oral q12h',ren:'No routine renal adjustment. Accumulates in renal failure; consider levels.',note:'Myelosuppression (weekly FBC beyond 10 days). Serotonin syndrome with SSRIs. Lactic acidosis.'},
+ {d:'Gentamicin',c:'Antibiotic (aminoglycoside)',use:'Synergy in serious Gram-negative infection (short course)',dose:'5–7 mg/kg IV q24h, dosed by level',ren:'Dose by level and renal function. Avoid or very short course in AKI. CVVHD: dose by level.',note:'Nephrotoxic and ototoxic. Use with the Trust aminoglycoside protocol.'},
+ {d:'Amikacin',c:'Antibiotic (aminoglycoside)',use:'Gram-negative infection, resistant organisms',dose:'15–20 mg/kg IV q24h (dose by level)',ren:'CVVHD: 7.5 mg/kg q24h and monitor levels (Renal Drug Handbook). HD: 5 mg/kg after dialysis.',note:'Peak <30 mg/L, trough <5 mg/L. Nephrotoxic and ototoxic.'},
+ {d:'Ceftriaxone',c:'Antibiotic (cephalosporin)',use:'Community-acquired pneumonia, meningitis (2 g), UTI',dose:'2 g IV q24h (2 g q12h for meningitis)',ren:'No renal adjustment needed.',note:'Biliary sludge. Avoid calcium-containing IV fluids in neonates.'},
+ {d:'Cefepime',c:'Antibiotic (cephalosporin)',use:'Febrile neutropenia, Pseudomonas cover',dose:'2 g IV q8h',ren:'CrCl 30–60: 2 g q12h. CrCl 11–29: 2 g q24h. CVVHD: 2 g q12h per protocol.',note:'Neurotoxicity in renal impairment.'},
+ {d:'Co-amoxiclav',c:'Antibiotic (penicillin + BLI)',use:'Community infection, aspiration pneumonia',dose:'1.2 g IV q8h',ren:'CrCl 10–30: 1.2 g q12h. CrCl <10: 600 mg q24h.',note:'Use IV dose for severe infection.'},
+ {d:'Flucloxacillin',c:'Antibiotic (penicillin)',use:'Staphylococcus aureus (MSSA), cellulitis',dose:'2 g IV q6h',ren:'CrCl 10–50: 2 g q6–8h. CrCl <10: 2 g q8h (dose by protocol).',note:'Give 1 h before food when oral. Cholestatic hepatitis risk.'},
+ {d:'Ciprofloxacin',c:'Antibiotic (fluoroquinolone)',use:'Gram-negative infection, urinary sepsis',dose:'400 mg IV q12h',ren:'CrCl 30–50: 400 mg q12h. CrCl <30: 400 mg q24h.',note:'QT prolongation. Tendon and CNS toxicity. Avoid with theophylline.'},
+ {d:'Levofloxacin',c:'Antibiotic (fluoroquinolone)',use:'Pneumonia, Legionella, atypical cover',dose:'500 mg IV q24h (750 mg if severe)',ren:'CrCl 20–49: 750 mg q48h. CrCl 10–19: 750 mg q48h or 500 mg then 250 mg q24h per protocol.',note:'QT prolongation. Tendon and CNS toxicity.'},
+ {d:'Clarithromycin / Azithromycin',c:'Antibiotic (macrolide)',use:'Atypical pneumonia, Legionella',dose:'Azithromycin 500 mg IV q24h; clarithromycin 500 mg IV q12h',ren:'Azithromycin: no change. Clarithromycin: reduce by 50% if CrCl <30.',note:'QT prolongation. Interacts with many drugs (clarithromycin strongly, via CYP3A4).'},
+ {d:'Metronidazole',c:'Antibiotic (nitroimidazole)',use:'Anaerobic and intra-abdominal infection, C. difficile (with oral vancomycin)',dose:'500 mg IV q8h',ren:'No renal adjustment.',note:'Neuropathy with long courses. Potentiates warfarin.'},
+ {d:'Clindamycin',c:'Antibiotic (lincosamide)',use:'Toxin suppression in severe Gram-positive infection, anaerobic cover',dose:'600 mg IV q6–8h',ren:'No renal adjustment.',note:'C. difficile risk. Give as a slow infusion.'},
+ {d:'Aciclovir IV',c:'Antiviral',use:'HSV encephalitis, VZV',dose:'HSV encephalitis: 10 mg/kg q8h',ren:'See the Renal section for the full dosing table and CVVHD notes.',note:'Hydrate well. Can cause crystal nephropathy.'},
+ {d:'Fluconazole',c:'Antifungal (azole)',use:'Candidaemia, Candida infection (susceptible)',dose:'Loading 800 mg (12 mg/kg) day 1, then 400 mg (6 mg/kg) daily',ren:'CrCl 50 or less: give 50% of dose. CVVHD: 400 mg daily is usual.',note:'Many interactions (CYP2C9, CYP3A4). QT prolongation at high doses.'},
+ {d:'Voriconazole',c:'Antifungal (azole)',use:'Invasive aspergillosis',dose:'Load 6 mg/kg IV q12h for 2 doses, then 4 mg/kg q12h',ren:'IV SBECD vehicle accumulates if CrCl under 50. Consider oral when stable or use levels.',note:'Take levels (trough). Visual changes, hepatotoxicity, photosensitivity.'},
+ {d:'Posaconazole',c:'Antifungal (azole)',use:'Prophylaxis or treatment of aspergillosis, mucormycosis',dose:'300 mg IV q12h on day 1, then 300 mg q24h',ren:'No adjustment for IV; caution with SBECD vehicle if CrCl under 50.',note:'Take levels. QT prolongation. Strong CYP3A4 inhibitor.'},
+ {d:'Isavuconazole',c:'Antifungal (azole)',use:'Invasive aspergillosis, mucormycosis',dose:'372 mg IV q8h for 6 doses, then 372 mg q24h',ren:'No renal adjustment.',note:'Shortens QT. Fewer interactions than voriconazole.'},
+ {d:'Micafungin',c:'Antifungal (echinocandin)',use:'Candidaemia, invasive candidiasis',dose:'100 mg IV q24h (150 mg for some infections per protocol)',ren:'No renal adjustment.',note:'Well tolerated. Limited CNS penetration.'},
+ {d:'Caspofungin',c:'Antifungal (echinocandin)',use:'Candidaemia, invasive candidiasis, aspergillosis (salvage)',dose:'70 mg IV load, then 50 mg q24h',ren:'No renal adjustment.',note:'Reduce dose with liver impairment (per SPC).'},
+ {d:'Anidulafungin',c:'Antifungal (echinocandin)',use:'Candidaemia, invasive candidiasis',dose:'200 mg IV load, then 100 mg q24h',ren:'Negligible renal clearance; no adjustment. Dilution up to 250 mL NaCl 0.9% or glucose 5%.',note:'Infuse at 1.1 mg/min. See the Renal Drug Handbook page.'},
+ {d:'Liposomal amphotericin (AmBisome)',c:'Antifungal (polyene)',use:'Empirical or proven invasive fungal infection, cryptococcal meningitis',dose:'3–5 mg/kg IV q24h',ren:'No renal adjustment. Still nephrotoxic. Monitor U&E and K+/Mg2+.',note:'Test dose and monitor for infusion reactions. In CVVHD, give into the venous return of the circuit.'}
+];
+function renderAbx(){
+  const q=document.getElementById('aSearch').value.trim().toLowerCase();
+  const list=ABX.filter(x=>!q||(x.d+' '+x.c+' '+x.use).toLowerCase().includes(q));
+  document.getElementById('aList').innerHTML=list.length? list.map(x=>'<div class="card"><h2>'+x.d+'</h2><div class="small muted">'+x.c+'</div><div class="kv small" style="margin-top:8px"><div>Use</div><div>'+x.use+'</div><div>Dose</div><div>'+x.dose+'</div><div>Renal / CVVHD</div><div>'+x.ren+'</div><div>Notes</div><div>'+x.note+'</div></div></div>').join('') : '<div class="card muted">No match.</div>';
+}
+document.getElementById('aSearch').addEventListener('input',renderAbx);
+renderAbx();
+let RDH=null;
+async function loadRDH(){ if(RDH) return RDH; try{ const r=await fetch('renal.json'); RDH=await r.json(); }catch(e){ RDH=[]; } return RDH; }
+function escRe(q){ return q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+function escH(x){ return x.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+async function fullSearch(){
+  const q=document.getElementById('rSearch').value.trim();
+  const box=document.getElementById('rFull');
+  if(q.length<3){ box.innerHTML=''; return; }
+  box.innerHTML='<div class="card small muted">Searching the full handbook…</div>';
+  const data=await loadRDH();
+  if(!data.length){ box.innerHTML='<div class="card small muted">Full handbook text could not be loaded.</div>'; return; }
+  const re=new RegExp(escRe(q),'i');
+  const hits=[];
+  for(const pg of data){ const m=re.exec(pg.t); if(m){ hits.push({p:pg.p,t:pg.t,i:m.index}); if(hits.length>=40) break; } }
+  const hl=new RegExp(escRe(q),'gi');
+  box.innerHTML='<h3>Full handbook matches ('+hits.length+(hits.length>=40?'+':'')+') — PDF page numbers</h3>'
+    + (hits.length ? hits.map(h=>{
+        const s=Math.max(0,h.i-100), e=Math.min(h.t.length,h.i+160);
+        const snip=escH(h.t.slice(s,e)).replace(hl,m=>'<mark>'+m+'</mark>');
+        const full=escH(h.t).replace(hl,m=>'<mark>'+m+'</mark>');
+        return '<details><summary>Page '+h.p+' — <span class="small">'+snip+'</span></summary><pre class="small" style="white-space:pre-wrap;margin:8px 0 0;font-family:inherit">'+full+'</pre></details>';
+      }).join('') : '<div class="card small muted">No matches.</div>');
+}
+document.getElementById('rSearch').addEventListener('input',fullSearch);
+
+/* ================= LocSSIP INTERACTIVE CHECKLISTS ================= */
+const PROCS=[
+ {n:'Intubation (ITU)',ph:[
+   ['Before the procedure',['Team introduced and roles allocated (intubator, drugs, assistant, cricoid, MILS)','Difficult airway discussed; difficult airway trolley ready if needed','Patient position optimised; spinal precautions if required','Pre-oxygenate 100% for 3 min; nasal cannulae for apnoeic oxygenation if needed',"Water's circuit available and ready",'Cricoid considered; NG tube aspirated','Monitoring attached: ECG, SpO2, BP on regular cycling, EtCO2','Suction ready','Adequate venous access in place','Laryngoscope(s) and bougie ready; ETTs, OPAs and iGels available','Drugs and vasopressors ready; drug allergies known','Senior help informed if needed','Post-intubation sedation ready']],
+   ['Time out (verbal, before start)',['Intubator, drugs and assistant roles confirmed aloud','Drug doses and sequence confirmed aloud','Concerns about the procedure and how they are mitigated discussed']],
+   ['Sign out (after procedure)',['Endotracheal position confirmed (EtCO2 trace)','Tube depth checked; bilateral air entry present','ETT secured; cuff pressure checked','Nasal O2 removed','Ventilator settings confirmed','Analgesia and sedation started','ICP optimisation discussed with neurosurgery if needed','Chest X-ray requested if required','Handover to nursing staff','Adverse events documented']]]},
+ {n:'Tracheostomy',ph:[
+   ['Before the procedure',['Consent completed; patient identity checked','Coagulation and drug allergies checked','Team introduced; roles assigned; ultrasound available if used','All equipment available: bronchoscope, spare tubes, difficult airway plan','Ventilator settings and FiO2 optimised; capnography in situ','Patient adequately sedated and paralysed','Feed stopped and NG tube aspirated','Spinal precautions considered','Chlorhexidine 2% / 70% alcohol prep applied and dry; large drape used','Sterile gown, gloves and personal protective equipment worn']],
+   ['Time out (verbal, before start)',['Tracheostomy position and stoma confirmed with bronchoscope','Sharps and drugs confirmed','Concerns and mitigations discussed']],
+   ['Sign out (after procedure)',['Tracheostomy secured; cuff pressure checked','EtCO2 confirmed; ventilator settings reviewed','Bronchoscopy position confirmed (in flexed and extended neck)','Chest X-ray if required','Tracheostomy bedhead sign placed','Sharps safely disposed','Adverse events documented']]]},
+ {n:'Bronchoscopy',ph:[
+   ['Before the procedure',['Consent completed; patient identity checked','Ventilator on 100% FiO2 with adequate settings','Patient adequately sedated and paralysed','Monitoring including EtCO2 attached; capnography in situ','Contraindications reviewed (high FiO2 or PEEP, anatomical, vascular, coagulopathy)','Coagulation and drug allergies checked','Feed stopped and NG tube aspirated','Spinal precautions if required','Suitable equipment available; roles assigned']],
+   ['Time out (verbal, before start)',['Sedation and sample plan confirmed','Concerns and mitigations discussed']],
+   ['Sign out (after procedure)',['Ventilator settings reviewed post procedure','BAL and tissue samples sent and recorded','Sedation given recorded','Chest X-ray if required','Post-procedure handover given to nursing staff','Adverse events documented']]]},
+ {n:'Central venous catheter (CVC)',ph:[
+   ['Before the procedure',['Consent completed; patient identity checked','Coagulation and drug allergies checked','Equipment and trolley prepared; ultrasound available','Two-person team: operator and assistant','Sterile gown, gloves and personal protective equipment worn','Chlorhexidine 2% / 70% alcohol applied to site and allowed to dry','Large sterile drape used']],
+   ['Time out (verbal, before start)',['Correct line type and size ready; integrity checked','Correct site confirmed; team roles confirmed','Concerns and mitigations discussed']],
+   ['Sign out (after procedure)',['Able to aspirate and flush all lumens','Caps placed using sterile technique; sterile dressing applied','Guidewire removed','CVP waveform present; CVP recorded','Ultrasound confirms placement','Paired venous and arterial gas if position unclear','Chest X-ray if required; pneumothorax excluded','Adverse events documented']]]},
+ {n:'Chest drain',ph:[
+   ['Before the procedure',['Indication confirmed (pneumothorax or effusion); CXR correlates with clinical signs','Consent completed; patient identity checked','Coagulation and drug allergies checked','Suitable drain and equipment available (ultrasound if needed)','Site confirmed and safe triangle identified','Analgesia prescribed; patient advised','Patient adequately sedated; ventilator and FiO2 optimised','Team roles assigned; procedure urgent or not confirmed']],
+   ['Time out (verbal, before start)',['Position optimal; procedure confirmed','Concerns and mitigations discussed']],
+   ['During the procedure',['Sterile scrub, gown and gloves; Chloraprep 2% to skin','Large fenestrated drape used','Local anaesthetic infiltrated; stop if unable to aspirate air or fluid','Drain type and size recorded; method (surgical or Seldinger) recorded','Samples sent: microbiology, histology, MC&S if indicated']],
+   ['Sign out (after procedure)',['Sutures, tubing and dressing secured; drain not elevated above the chest','Effusion drainage limits understood: 500 mL first hour, 1500 mL first 24 h','Chest X-ray requested to confirm position','Verbal handover to nurse responsible for patient','Adverse events documented']]]}
+];
+let PSTATE={};
+function updCnt(){ PROCS.forEach((p,pi)=>{ let tot=0,done=0; p.ph.forEach((ph,fi)=>ph[1].forEach((_,ii)=>{tot++; if(PSTATE[pi+'-'+fi+'-'+ii]) done++;})); const el=document.querySelector('[data-cnt="'+pi+'"]'); if(el) el.textContent=done+'/'+tot+(done===tot?' complete':''); }); }
+function copyText(txt,msgEl){
+  const done=()=>{ if(msgEl) msgEl.textContent='Copied to clipboard.'; };
+  const fallback=()=>{ const ta=document.createElement('textarea'); ta.value=txt; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); let ok=false; try{ ok=document.execCommand('copy'); }catch(e){} ta.remove(); if(msgEl) msgEl.textContent= ok?'Copied to clipboard.':'Could not copy. Select the text manually.'; };
+  try{ navigator.clipboard.writeText(txt).then(done,fallback); }catch(e){ fallback(); }
+}
+function exportFile(name,txt,msgEl){
+  if(window.Android&&Android.saveText){ try{ const r=Android.saveText(name,txt); if(msgEl) msgEl.textContent=r||'Saved to Downloads: '+name; return; }catch(e){} }
+  const blob=new Blob([txt],{type:'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  if(msgEl) msgEl.textContent='Downloaded '+name;
+}
+function logText(){
+  const lines=A.log.slice().reverse().map(e=>e.line);
+  const head='ICU arrest log ('+(A.mode==='adult'?'adult':'child')+(wt()?', '+wt().toFixed(1)+' kg':'')+') '+new Date().toLocaleString('en-GB');
+  return lines.length? head+'\n'+lines.join('\n') : head+'\nNo events logged.';
+}
+function procText(pi){
+  const p=PROCS[pi]; let out=p.n+'\n';
+  p.ph.forEach((ph,fi)=>{ out+='\n'+ph[0]+'\n'; ph[1].forEach((it,ii)=>{ out+=(PSTATE[pi+'-'+fi+'-'+ii]?'[x] ':'[ ] ')+it+'\n'; }); });
+  return out;
+}
+document.getElementById('exportLog').addEventListener('click',()=>exportFile('arrest-log-'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'')+'.txt',logText(),document.getElementById('copyMsg')));
+document.getElementById('copyLog').addEventListener('click',()=>{
+  const lines=A.log.slice().reverse().map(e=>e.line);
+  const head='ICU arrest log ('+(A.mode==='adult'?'adult':'child')+(wt()?', '+wt().toFixed(1)+' kg':'')+')';
+  copyText(lines.length? head+'\n'+lines.join('\n') : head+'\nNo events logged.', document.getElementById('copyMsg'));
+});
+document.getElementById('procList').addEventListener('click',ev=>{
+  const x=ev.target.closest('[data-export-proc]'); if(x){ const pi=+x.dataset.exportProc; exportFile('checklist-'+PROCS[pi].n.split(' ')[0].toLowerCase()+'.txt',procText(pi),null); x.textContent='Saved'; setTimeout(()=>{x.textContent='Export .txt';},1500); return; }
+  const b=ev.target.closest('[data-copy-proc]'); if(!b) return;
+  const pi=+b.dataset.copyProc, p=PROCS[pi]; let out=p.n+'\n';
+  p.ph.forEach((ph,fi)=>{ out+='\n'+ph[0]+'\n'; ph[1].forEach((it,ii)=>{ out+=(PSTATE[pi+'-'+fi+'-'+ii]?'[x] ':'[ ] ')+it+'\n'; }); });
+  copyText(out, b);
+  const orig=b.textContent; b.textContent='Copied'; setTimeout(()=>{b.textContent=orig;},1500);
+});
+
+function renderProcs(){
+  document.getElementById('procList').innerHTML=PROCS.map((p,pi)=>
+    '<details'+(pi===0?' open':'')+'><summary>'+p.n+' <span class="badge" data-cnt="'+pi+'"></span></summary>'
+    + p.ph.map((ph,fi)=>'<h3>'+ph[0]+'</h3>'+ph[1].map((it,ii)=>'<label class="chk"><input type="checkbox" data-pi="'+pi+'" data-k="'+fi+'-'+ii+'"'+(PSTATE[pi+'-'+fi+'-'+ii]?' checked':'')+'><span>'+it+'</span></label>').join('')).join('')
+    + '<div class="row" style="margin-top:8px"><button data-copy-proc="'+pi+'">Copy checklist</button><button data-export-proc="'+pi+'">Export .txt</button><button data-preset-reset="'+pi+'">Reset this checklist</button></div></details>'
+  ).join('');
+  updCnt();
+}
+document.getElementById('procList').addEventListener('change',ev=>{const c=ev.target; if(c.matches('input[data-pi]')){ PSTATE[c.dataset.pi+'-'+c.dataset.k]=c.checked; updCnt(); }});
+document.getElementById('procList').addEventListener('click',ev=>{const b=ev.target.closest('[data-preset-reset]'); if(!b) return; const pi=b.dataset.presetReset; Object.keys(PSTATE).forEach(k=>{ if(k.split('-')[0]===String(pi)) delete PSTATE[k]; }); document.querySelectorAll('input[data-pi="'+pi+'"]').forEach(i=>i.checked=false); updCnt();});
+renderProcs();
+
+/* ================= CUSTOM INFUSION CALCULATOR ================= */
+const ccDrug=document.getElementById('ccDrug'), ccBag=document.getElementById('ccBag'), ccAmt=document.getElementById('ccAmt'), ccVol=document.getElementById('ccVol'), ccWt=document.getElementById('ccWt'), ccRate=document.getElementById('ccRate');
+INF.forEach((d,i)=>{const o=document.createElement('option');o.value=i;o.textContent=d.name;o.style.background=CATCOL[d.cls]||'';o.style.color=d.cls?'#15202b':'';ccDrug.appendChild(o);});
+function ccD(){return INF[parseInt(ccDrug.value,10)];}
+function ccFillBags(){
+  const d=ccD(); ccBag.innerHTML='';
+  ccDrug.style.background=CATCOL[d.cls]||'';
+  ccDrug.style.color=d.cls?'#15202b':'';
+  document.getElementById('ccCat').innerHTML=d.cls?'<span class="cat '+d.cls+'">'+d.catName+'</span>':'';
+  d.presets.forEach((p,i)=>{const o=document.createElement('option');o.value=i;o.textContent=p.label;ccBag.appendChild(o);});
+  const c=document.createElement('option');c.value='custom';c.textContent='Custom bag';ccBag.appendChild(c);
+  ccBag.value='0'; applyBag();
+}
+function applyBag(){
+  const d=ccD();
+  if(ccBag.value!=='custom'){const p=d.presets[parseInt(ccBag.value,10)]; ccAmt.value=p.amount; ccVol.value=p.vol; document.getElementById('ccNote').textContent=p.note;}
+  else document.getElementById('ccNote').textContent='Custom bag: enter the drug amount and total volume.';
+  renderCC();
+}
+function renderCC(){
+  const d=ccD(), base=d.base, tgt=d.unit.split('/')[0];
+  document.getElementById('ccAmtLbl').textContent='Drug amount ('+base+')';
+  const amt=parseFloat(ccAmt.value), vol=parseFloat(ccVol.value), wt=parseFloat(ccWt.value), rate=parseFloat(ccRate.value);
+  const f=(tgt==='mcg'&&base==='mg')?1000:((tgt==='mg'&&base==='mcg')?0.001:1);
+  const fm=base==='mg'?1000:1;
+  const out=document.getElementById('ccOut'), work=document.getElementById('ccWork'), flag=document.getElementById('ccFlag'), concEl=document.getElementById('ccConc');
+  flag.innerHTML='';
+  if(!(amt>0&&vol>0)){ concEl.textContent='—'; out.textContent='—'; work.textContent='Enter the drug amount and total volume.'; return; }
+  const conc=amt/vol;
+  concEl.textContent=conc.toFixed(3)+' '+base+'/mL'+(base==='mg'?' ('+(conc*1000).toFixed(0)+' mcg/mL)':'');
+  if(!(rate>=0)){ out.textContent='—'; work.textContent='Enter the pump rate (mL/hr).'; return; }
+  const perHr=conc*rate, perMin=perHr/60;
+  const hasWt=wt>0;
+  let primary = d.perKg ? (hasWt ? (d.per==='min'?perMin:perHr)*f/wt : null) : (d.per==='min'?perMin:perHr)*f;
+  if(primary===null){ out.textContent='Enter weight for '+d.unit; work.textContent='Working: '+conc.toFixed(3)+' '+base+'/mL × '+rate+' mL/hr'; return; }
+  out.textContent=primary.toFixed(3)+' '+d.unit;
+  let w='Working: '+conc.toFixed(3)+' '+base+'/mL × '+rate+' mL/hr ÷ '+(d.per==='min'?60:1)+(d.perKg?' ÷ '+wt+' kg':'')+' = '+primary.toFixed(3)+' '+d.unit;
+  if(hasWt && base!=='units'){ w+='<br>Also: '+(perMin*fm/wt).toFixed(3)+' mcg/kg/min · '+(perHr*fm/wt).toFixed(2)+' mcg/kg/hr'; }
+  work.innerHTML=w;
+  if(d.range){ const lo=d.range[0], hi=d.range[1];
+    if(primary<lo) flag.innerHTML='<div class="warnbox small">Below the guide range ('+lo+'–'+hi+' '+d.unit+').</div>';
+    else if(primary>hi) flag.innerHTML='<div class="critbox small">Above the guide range ('+lo+'–'+hi+' '+d.unit+'). Check the prescription.</div>';
+    else flag.innerHTML='<div class="okbox small">Within the guide range ('+lo+'–'+hi+' '+d.unit+').</div>'; }
+  if(d.central) flag.innerHTML+='<div class="small muted">Central line only.</div>';
+}
+ccDrug.addEventListener('change',ccFillBags);
+ccBag.addEventListener('change',applyBag);
+['ccAmt','ccVol'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{ccBag.value='custom';renderCC();}));
+['ccWt','ccRate','ccDil'].forEach(id=>document.getElementById(id).addEventListener('input',renderCC));
+ccFillBags();
+renderRenal();
+</script>
