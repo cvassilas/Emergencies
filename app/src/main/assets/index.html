@@ -692,7 +692,15 @@ function markROSC(){
   document.getElementById('rhythmInfo').textContent='ROSC achieved. Begin post-ROSC care: 12-lead ECG, oxygen to SpO2 94–98%, MAP target, and temperature control.';
 }
 document.getElementById('startBtn').addEventListener('click',()=>{ A.running? pauseArrest() : startArrest(); });
+let resetArmed=null;
 document.getElementById('resetBtn').addEventListener('click',()=>{
+  const rb=document.getElementById('resetBtn');
+  if(!resetArmed){
+    rb.textContent='Tap again to reset'; rb.className='crit';
+    resetArmed=setTimeout(()=>{ rb.textContent='Reset'; rb.className=''; resetArmed=null; },3000);
+    return;
+  }
+  clearTimeout(resetArmed); resetArmed=null; rb.textContent='Reset'; rb.className='';
   pauseArrest();
   Object.assign(A,{elapsed:0,cycleStart:0,cycleNum:0,shocks:0,shockableLast:null,adrTimes:[],amioDoses:[],rosc:false,log:[],running:false});
   clearInterval(A.tick); A.tick=null;
