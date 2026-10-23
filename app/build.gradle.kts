@@ -7,10 +7,23 @@ android {
         applicationId = "com.cvassilas.emergencies"
         minSdk = 29
         targetSdk = 34
-        versionCode = 1
+        versionCode = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInt()
         versionName = "1.0"
     }
-    buildTypes { release { isMinifyEnabled = false } }
+    signingConfigs {
+        create("release") {
+            storeFile = file("release.jks")
+            storePassword = "emergencies-release"
+            keyAlias = "emergencies"
+            keyPassword = "emergencies-release"
+        }
+    }
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

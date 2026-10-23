@@ -64,7 +64,7 @@ summary{cursor:pointer;font-weight:600}
 .chk{display:flex;gap:8px;align-items:flex-start;padding:5px 0}
 .chk input{width:auto;min-height:0;margin-top:3px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.seg button{border:0;border-radius:0;min-height:36px}
+.seg button{border:0;border-radius:0;min-height:44px;padding:10px 18px}
 .seg button.active{background:var(--accent);color:var(--accent-ink);outline:none}
 .cat{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;border-left:4px solid;color:var(--ink)}
 .c-pressor{background:rgba(233,30,99,.2);border-color:#e91e63}
@@ -106,8 +106,8 @@ button.amio:disabled{opacity:.45}
         <button id="modePaed">Child (PLS)</button>
       </div>
       <div class="row">
-        <label style="margin:0"><input type="number" id="arrestWt" placeholder="Weight kg" style="width:120px;min-height:36px"></label>
-        <label id="ageWrap" style="margin:0"><input type="number" id="arrestAge" placeholder="Age (yrs)" step="0.1" style="width:110px;min-height:36px"></label>
+        <input type="number" id="arrestWt" placeholder="Weight kg" aria-label="Weight in kg" style="width:140px">
+        <span id="ageWrap" style="display:inline-block"><input type="number" id="arrestAge" placeholder="Age (yrs)" aria-label="Age in years" step="0.1" style="width:130px"></span>
         <span id="wtEst" class="small" style="font-weight:600"></span>
       </div>
     </div>
