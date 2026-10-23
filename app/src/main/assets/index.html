@@ -912,6 +912,21 @@ function patientWt(){
   if(document.getElementById('infBasis').value!=='ideal') return act;
   const i=ibw(); return i? i : act;
 }
+const _alerted={};
+function showModal(title,msg){
+  let m=document.getElementById('alertModal');
+  if(!m){ m=document.createElement('div'); m.id='alertModal'; m.setAttribute('role','alertdialog'); m.setAttribute('aria-modal','true');
+    m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:99;padding:16px';
+    document.body.appendChild(m); }
+  m.innerHTML='<div class="card" style="max-width:360px;width:100%;border:2px solid var(--crit);background:var(--surface);margin:0"><h2 style="color:var(--crit)">'+title+'</h2><div style="margin:8px 0">'+msg+'</div><button class="crit" id="alertOk" style="width:100%">Acknowledge</button></div>';
+  m.style.display='flex';
+  const ok=document.getElementById('alertOk'); ok.onclick=()=>{ m.style.display='none'; }; ok.focus();
+}
+function aboveRange(el,val,lo,hi,unit,key){
+  el.innerHTML='<div class="critbox flash small"><b>ABOVE GUIDE RANGE</b><br>'+val.toFixed(3)+' '+unit+' is above '+lo+'–'+hi+' '+unit+'. Check the prescription and pump before continuing.</div>';
+  if(!_alerted[key]){ _alerted[key]=true; showModal('Above guide rate','The rate is above the guide range ('+lo+'–'+hi+' '+unit+'). Check the prescription and pump before continuing.'); }
+}
+function clearAlert(key){ _alerted[key]=false; }
 function concMgPerMl(p){ return p.amount / p.vol; } /* base units per mL */
 function renderInf(){
   const d=curDrug(), p=curPreset();
@@ -941,7 +956,7 @@ function renderInf(){
     if(d.unit.indexOf('mg/')===0 || d.unit.indexOf('/hr')>=0 && baseLabel==='mg'){ /* base mg already */ }
     outDiv.textContent=shown.toFixed(shown<0.1?3:2)+' '+d.unit;
     work.innerHTML = 'Working: '+cm.toFixed(3)+' '+baseLabel+'/mL × '+rate+' mL/hr ÷ '+ratePer+' '+(d.per==='min'?'(min)':'')+(d.perKg?' ÷ '+wt.toFixed(1)+' kg':'')+' = <b>'+shown.toFixed(3)+' '+d.unit+'</b>'+(d.basis!=='fixed'?' · '+(document.getElementById('infBasis').value==='ideal'?'IBW':'actual')+' weight':'');
-    if(d.range){ const lo=d.range[0],hi=d.range[1]; if(shown<lo) flag.innerHTML='<div class="warnbox small">Below the guide range ('+lo+'–'+hi+' '+d.unit+').</div>'; else if(shown>hi) flag.innerHTML='<div class="critbox small">Above the guide range ('+lo+'–'+hi+' '+d.unit+'). Check the prescription.</div>'; else flag.innerHTML='<div class="okbox small">Within the guide range ('+lo+'–'+hi+' '+d.unit+').</div>'; }
+    if(d.range){ const lo=d.range[0],hi=d.range[1]; if(shown<lo){clearAlert('inf');flag.innerHTML='<div class="warnbox small">Below the guide range ('+lo+'–'+hi+' '+d.unit+').</div>';} else if(shown>hi){aboveRange(flag,shown,lo,hi,d.unit,'inf');} else {clearAlert('inf');flag.innerHTML='<div class="okbox small">Within the guide range ('+lo+'–'+hi+' '+d.unit+').</div>';} }
   } else {
     rateLbl.textContent='Rate (mL/hr)';
     tgtLbl.textContent='Target dose ('+d.unit+')';
@@ -1194,9 +1209,9 @@ function renderCC(){
   if(hasWt && base!=='units'){ w+='<br>Also: '+(perMin*fm/wt).toFixed(3)+' mcg/kg/min · '+(perHr*fm/wt).toFixed(2)+' mcg/kg/hr'; }
   work.innerHTML=w;
   if(d.range){ const lo=d.range[0], hi=d.range[1];
-    if(primary<lo) flag.innerHTML='<div class="warnbox small">Below the guide range ('+lo+'–'+hi+' '+d.unit+').</div>';
-    else if(primary>hi) flag.innerHTML='<div class="critbox small">Above the guide range ('+lo+'–'+hi+' '+d.unit+'). Check the prescription.</div>';
-    else flag.innerHTML='<div class="okbox small">Within the guide range ('+lo+'–'+hi+' '+d.unit+').</div>'; }
+    if(primary<lo){clearAlert('cc');flag.innerHTML='<div class="warnbox small">Below the guide range ('+lo+'–'+hi+' '+d.unit+').</div>';}
+    else if(primary>hi){aboveRange(flag,primary,lo,hi,d.unit,'cc');}
+    else {clearAlert('cc');flag.innerHTML='<div class="okbox small">Within the guide range ('+lo+'–'+hi+' '+d.unit+').</div>';} }
   if(d.central) flag.innerHTML+='<div class="small muted">Central line only.</div>';
 }
 ccDrug.addEventListener('change',ccFillBags);
