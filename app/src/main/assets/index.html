@@ -71,6 +71,8 @@ summary{cursor:pointer;font-weight:600}
 .c-para{background:rgba(229,57,53,.2);border-color:#e53935}
 .c-sed{background:rgba(251,192,45,.25);border-color:#fbc02d}
 .c-opi{background:rgba(30,136,229,.2);border-color:#1e88e5}
+button.amio{background:#6a1b9a;color:#fff;border-color:#6a1b9a;font-weight:600}
+button.amio:disabled{opacity:.45}
 .log{font-size:13px;max-height:200px;overflow:auto;border-top:1px solid var(--line);margin-top:8px;padding-top:6px}
 .log div{padding:2px 0}
 </style>
@@ -155,7 +157,7 @@ summary{cursor:pointer;font-weight:600}
         <div class="small muted">Amiodarone</div>
         <div class="out" id="amioDose">300 mg</div>
         <div class="small muted" id="amioNext">Due after 3rd shock</div>
-        <button id="btnAmio" style="margin-top:4px" disabled>Amiodarone given</button>
+        <button id="btnAmio" class="amio" style="margin-top:4px" disabled>Amiodarone given</button>
       </div>
     </div>
     <div class="small muted" style="margin-top:10px">Shock count: <span id="shockCount" class="tabular">0</span> · Energy: <span id="energy">150 J</span></div>
